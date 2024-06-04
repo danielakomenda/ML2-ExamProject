@@ -19,3 +19,6 @@ Start backend-server in debug-mode: litestar run -rd
 Go to directory: cd frontend
 Install dependencies: npm install
 Start frontend: npm run dev
+
+
+## Get Access to DB nd API
