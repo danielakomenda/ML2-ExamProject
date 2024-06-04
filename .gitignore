@@ -1,0 +1,20 @@
+.DS*
+__pycache__/
+.venv
+
+### Frontend
+node_modules
+.npmrc
+build/
+
+### Backend
+lib
+
+
+### Notebooks
+.ipynb_checkpoints
+~*
+
+
+### Credentials
+.env
