@@ -4,6 +4,7 @@ import SemesterData from "./pages/SemesterData.svelte";
 import Assessement from "./pages/Assessement.svelte";
 import Combine from "./pages/Combine.svelte";
 import CreateText from "./pages/CreateText.svelte";
+import CombineDirectly from "./pages/CombineDirect.svelte"
 
 export default {
     '/': Home,
@@ -12,5 +13,6 @@ export default {
     '/semester-data': SemesterData,
     '/assessment': Assessement,
     '/combine': Combine,
+    '/combine/:semester_id/:student_id': CombineDirectly,
     '/create-text': CreateText,
 }

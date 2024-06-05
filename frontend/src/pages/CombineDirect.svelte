@@ -2,69 +2,84 @@
     import { push } from "svelte-spa-router";
 
 
+    export let params = {};
+
+
     $: {
-            getAllPupils()
+            semester_id = params.semester_id
+            student_id = params.student_id
+            getAllAssessmentsDirectly()
     };
   
-      let students=[]
-      let semesters=[]
-      let assessments=[]
-  
-      let student_id
-      let semester_id
+    let student_id
+    let semester_id
+    let assessments=[]
+    let semester={}
+    let student={}
+    let visible=false
+    let recommendation='Zusätzliche Anmerkungen Vorschlag'
 
-      let recommendation='Zusätzliche Anmerkungen Vorschlag'
-
-      let formVisible=false
-  
-      let AktivTeilnehmen=''
-      let AktivTeilnehmenNotizen=''
-      let LeistungZeigen=''
-      let LeistungZeigenNotizen=''
-      let AufmerksamSein=''
-      let AufmerksamSeinNotizen=''
-      let SchulinhalteMerken=''
-      let SchulinhalteMerkenNotizen=''
-      let SchulinhalteAbrufen=''
-      let SchulinhalteAbrufenNotizen=''
-  
-  
-      async function getAllPupils() {
-          const response = await fetch('http://localhost:8000/get-all-pupils-data/', {
-              method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-          });
-          const responseData = await response.json();
-          students = responseData.data
-          if (response.ok) {
-              console.log('Success:', responseData);
-          } else {
-              console.error('Failed to find pupil:', responseData);
-          }
-      }
-  
-  
-      async function getSemestersOfPupil() {
-          const response = await fetch('http://localhost:8000/get-all-semesters-data/' + student_id, {
-              method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-          });
-          const responseData = await response.json();
-          semesters = responseData.data
-          if (response.ok) {
-              console.log('Success:', responseData);
-          } else {
-              console.error('Failed to find student:', responseData);
-          }
-      }
+    let AktivTeilnehmen=semester["AktivTeilnehmen"]
+    let AktivTeilnehmenNotizen=semester.AktivTeilnehmenNotizen
+    let LeistungZeigen=semester.LeistungZeigen
+    let LeistungZeigenNotizen=semester.LeistungZeigenNotizen
+    let AufmerksamSein=semester.AufmerksamSein
+    let AufmerksamSeinNotizen=semester.AufmerksamSeinNotizen
+    let SchulinhalteMerken=semester.SchulinhalteMerken
+    let SchulinhalteMerkenNotizen=semester.SchulinhalteMerkenNotizen
+    let SchulinhalteAbrufen=semester.SchulinhalteAbrufen
+    let SchulinhalteAbrufenNotizen=semester.SchulinhalteAbrufenNotizen
   
 
-      async function getAllAssessments() {
-          const response = await fetch('http://localhost:8000/get-all-assessments-data/' + semester_id, {
+
+      async function getPupil() {
+        const response = await fetch('http://localhost:8000/get-pupil-data/' + student_id, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const responseData = await response.json();
+        student = responseData.data
+        if (response.ok) {
+            console.log('Success:', responseData);
+        } else {
+            console.error('Failed to find student:', responseData);
+        }
+    }
+
+    async function getSemester() {
+        const response = await fetch('http://localhost:8000/get-semester-data/' + semester_id, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const responseData = await response.json();
+        semester = responseData.data
+
+
+        AktivTeilnehmen=semester.final_assessment.allgemeines_lernen.AktivTeilnehmen.assessment
+        AktivTeilnehmenNotizen=semester.final_assessment.allgemeines_lernen.AktivTeilnehmen.notes
+        LeistungZeigen=semester.final_assessment.allgemeines_lernen.LeistungZeigen.assessment
+        LeistungZeigenNotizen=semester.final_assessment.allgemeines_lernen.LeistungZeigen.notes
+        AufmerksamSein=semester.final_assessment.allgemeines_lernen.AufmerksamSein.assessment
+        AufmerksamSeinNotizen=semester.final_assessment.allgemeines_lernen.AufmerksamSein.notes
+        SchulinhalteMerken=semester.final_assessment.allgemeines_lernen.SchulinhalteMerken.assessment
+        SchulinhalteMerkenNotizen=semester.final_assessment.allgemeines_lernen.SchulinhalteMerken.notes
+        SchulinhalteAbrufen=semester.final_assessment.allgemeines_lernen.SchulinhalteAbrufen.assessment
+        SchulinhalteAbrufenNotizen=semester.final_assessment.allgemeines_lernen.SchulinhalteAbrufen.notes
+
+
+        if (response.ok) {
+            console.log('Success:', responseData);
+        } else {
+            console.error('Failed to find student:', responseData);
+        }
+    }
+  
+      async function getAllAssessmentsDirectly(){
+        const response = await fetch('http://localhost:8000/get-all-assessments-data/' + semester_id, {
               method: 'GET',
               headers: {
                   'Content-Type': 'application/json'
@@ -72,10 +87,11 @@
           });
           const responseData = await response.json();
           assessments = responseData.data
-          formVisible = true
           if (response.ok) {
-              console.log('Success:', responseData);
-              console.log(assessments[0])
+                getSemester()
+                getPupil()
+                console.log('Success:', responseData);
+                console.log(assessments[0])
           } else {
               console.error('Failed to find student:', responseData);
           }
@@ -182,6 +198,10 @@
         }
     }
 
+    function changeVisibility() {
+        visible=true
+    }
+
   </script>
       
   <div class="component">
@@ -189,25 +209,16 @@
           Zusammenführen
       </h1>
   
-      <select class="form-control" bind:value={student_id} on:change={getSemestersOfPupil} id="student_id" required>
-          <option value="">Schüler</option>
-          {#each students as student}
-              <option value={student._id}>{student.firstname} {student.lastname}</option>
-          {/each}
-      </select>
-  
-      <select class="form-control" bind:value={semester_id} on:change={getAllAssessments} id="semester" required>
-          <option value="">Semester</option>
-          {#each semesters as semester}
-              <option value={semester._id}>{semester.semester_name}</option>
-          {/each}
-      </select>
-  
+      <h2>Studentname: {student.firstname} {student.lastname}</h2>
+      <h2>Semester: {semester.semester_name}</h2>
+
       <form on:submit|preventDefault={checkAnswers}>
+
+
+        {#if visible}
 
 <!-- ################################### AKTIV AM UNTERRICHT TEILNEHMEN ################################### -->
 
-        {#if formVisible} 
             <div class="abschnitt" id="aktivteilnehmen">
                 <h2>Aktiv am Unterricht teilnehmen</h2>
                 <div class="table-responsive">
@@ -456,6 +467,7 @@
                 </div>
             </div>
 
+            {/if}
 <!-- ################################### ABSENDEN ################################### -->
         
         <div class="abschnitt">
@@ -479,7 +491,7 @@
                             {AktivTeilnehmenNotizen}
                         </td>
                         <td>
-                            <button type="button" on:click={() => scroll('aktivteilnehmen')}>Korrigieren</button>
+                            <button type="button" on:click={changeVisibility} on:click={() => scroll('aktivteilnehmen')}>Korrigieren</button>
                         </td>
                     </tr>
                     <tr>
@@ -493,7 +505,7 @@
                             {LeistungZeigenNotizen}
                         </td>
                         <td>
-                            <button type="button" on:click={() => scroll('leistungzeigen')}>Korrigieren</button>
+                            <button type="button" on:click={changeVisibility} on:click={() => scroll('leistungzeigen')}>Korrigieren</button>
                         </td>
                     </tr>
                     <tr>
@@ -507,7 +519,7 @@
                             {AufmerksamSeinNotizen}
                         </td>
                         <td>
-                            <button type="button" on:click={() => scroll('aufmerksamsein')}>Korrigieren</button>
+                            <button type="button" on:click={changeVisibility} on:click={() => scroll('aufmerksamsein')}>Korrigieren</button>
                         </td>
                     </tr>
                     <tr>
@@ -521,7 +533,7 @@
                             {SchulinhalteMerkenNotizen}
                         </td>
                         <td>
-                            <button type="button" on:click={() => scroll('schulinhaltemerken')}>Korrigieren</button>
+                            <button type="button" on:click={changeVisibility} on:click={() => scroll('schulinhaltemerken')}>Korrigieren</button>
                         </td>
                     </tr>
                     <tr>
@@ -535,7 +547,7 @@
                             {SchulinhalteAbrufenNotizen}
                         </td>
                         <td>
-                            <button type="button" on:click={() => scroll('schulinhalteabrufen')}>Korrigieren</button>
+                            <button type="button" on:click={changeVisibility} on:click={() => scroll('schulinhalteabrufen')}>Korrigieren</button>
                         </td>
                     </tr>
                 </table>
@@ -545,7 +557,6 @@
                 <button type="submit">Bestätigen</button>
                 <button type="button" on:click={cancel}>Abbrechen</button>
             </div>
-        {/if}
     </form>
 </div>
         

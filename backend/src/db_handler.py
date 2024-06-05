@@ -129,10 +129,22 @@ def insert_final_assessment(semester_id, data):
     
 ################################# CREATE-TEXT #################################
 
+def get_semesters_with_final_assessments(student_id):
+    results = []
+    collection = connect_to_db("Semester_Data")
+    cursor = collection.find({
+        "student_id":ObjectId(student_id),
+    })
+    for document in cursor:
+        if document["final_assessment"]:
+            results.append(document)
+    return serialize_obj(results)
+
+
 def insert_final_text(semester_id, data):
     collection = connect_to_db("Semester_Data")    
     filter = {
-        "semester_id": ObjectId(semester_id),
+        "_id":ObjectId(semester_id),
     }
     entry = {"$set": {"final_text": data}}
     collection.update_one(filter, entry, upsert=True)

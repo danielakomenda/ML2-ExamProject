@@ -111,24 +111,36 @@ async def create_final_assessment_data(semester_id:str, request:Request) -> dict
 ################################# CREATE-TEXT #################################
 
 
-@get("/get-text/{semester_id:str}")
-async def get_text_recommendation(semester_id:str) -> Dict[str, Any]:
-    text = get_text(semester_id)
+@get("/semesters-with-final-assessment/{student_id:str}")
+async def get_all_semesters_with_final_assessments(student_id:str) -> Dict[str, Any]:
+    data = get_semesters_with_final_assessments(student_id)
     return dict(
         status="success",
-        message=f"Created Text",
-        text=text
+        message=f"Found all final-assessments for student with id {student_id}",
+        data=data
     )
 
 
-@put("/create-final-text-data {semester_id:str}")
+@post("/generate-text")
+async def get_text_recommendation(request:Request) -> Dict[str, Any]:
+    data = await request.json()    
+    answer, chain = get_text(data)
+    return dict(
+        status="success",
+        message=f"Created Text",
+        answer=answer,
+        chain=chain,
+    )
+
+
+@put("/create-final-text-data/{semester_id:str}")
 async def create_final_text_data(semester_id:str, request:Request) -> dict:
     data = await request.json()
     entry = insert_final_text(semester_id, data)
     return dict(
         status="success",
         message=f"Successfully added final text for semester with id {data.get('semester_id')}",
-        entry=entry
+        entry=entry,
     )
 
 
@@ -143,6 +155,7 @@ app = Litestar(
         create_assessment_data,
         get_all_assessments_data,
         create_final_assessment_data,
+        get_all_semesters_with_final_assessments,
         get_text_recommendation,
         create_final_text_data,
     ], cors_config=cors_config

@@ -1,5 +1,5 @@
 <script>
-
+import { push } from "svelte-spa-router";
 
 $: {
         getAllPupils()
@@ -53,8 +53,8 @@ $: {
     }
 
 
-    async function getSemestersOfPupil() {
-        const response = await fetch('http://localhost:8000/get-all-semesters-data/' + student_id, {
+    async function getSemestersWithFinalAssessment() {
+        const response = await fetch('http://localhost:8000/semesters-with-final-assessment/' + student_id, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -90,20 +90,25 @@ $: {
     }
 
 
-    async function correctFinalAssessment(id) {
-
+    function correctFinalAssessment() {
+        push('/combine/' +semester_id +"/" +student_id);
     }
 
 
     async function getText() {
-        const response = await fetch('http://localhost:8000/get-text/' +semester_id, {
-            method: 'GET',
+        const data = {
+            semester:semester,
+            student:student,
+        }
+        const response = await fetch('http://localhost:8000/generate-text', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
+            body: JSON.stringify(data)
         });
         const responseData = await response.json();
-        text = responseData.text
+        text = responseData.answer
         console.log(final_assessment.allgemeines_lernen)
         textVisible = true
         if (response.ok) {
@@ -160,7 +165,7 @@ $: {
 <div class="component">
 <h1>Text generieren</h1>
 
-<select class="form-control" bind:value={student_id} on:change={getSemestersOfPupil} on:change={getPupil} id="student_id" required>
+<select class="form-control" bind:value={student_id} on:change={getSemestersWithFinalAssessment} on:change={getPupil} id="student_id" required>
     <option value="">Schüler</option>
     {#each students as student}
         <option value={student._id}>{student.firstname} {student.lastname}</option>
@@ -180,35 +185,31 @@ $: {
         <tr>
             <th class="assessment">Bewertung</th>
             <th class="notes">Anmerkungen</th>
-            <th class="correction"></th>
         </tr>
         <tr>
             <td class="assessment">{final_assessment.allgemeines_lernen.AktivTeilnehmen.assessment}</td>
             <td>{final_assessment.allgemeines_lernen.AktivTeilnehmen.notes}</td>
-            <td><button type="button" on:click={correctFinalAssessment("allgemeineslernen")}>Korrigieren</button></td>
+
         </tr>
         <tr>
             <td class="assessment">{final_assessment.allgemeines_lernen.LeistungZeigen.assessment}</td>
             <td>{final_assessment.allgemeines_lernen.LeistungZeigen.notes}</td>
-            <td><button type="button" on:click={correctFinalAssessment("leistungenzeigen")}>Korrigieren</button></td>
         </tr>
         <tr>
             <td class="assessment">{final_assessment.allgemeines_lernen.AufmerksamSein.assessment}</td>
             <td>{final_assessment.allgemeines_lernen.AufmerksamSein.notes}</td>
-            <td><button type="button" on:click={correctFinalAssessment("aufmerksamsein")}>Korrigieren</button></td>
         </tr>
         <tr>
             <td class="assessment">{final_assessment.allgemeines_lernen.SchulinhalteMerken.assessment}</td>
             <td>{final_assessment.allgemeines_lernen.SchulinhalteMerken.notes}</td>
-            <td><button type="button" on:click={correctFinalAssessment("schulinhaltemerken")}>Korrigieren</button></td>
         </tr>
         <tr>
             <td class="assessment">{final_assessment.allgemeines_lernen.SchulinhalteAbrufen.assessment}</td>
             <td>{final_assessment.allgemeines_lernen.SchulinhalteAbrufen.notes}</td>
-            <td><button type="button" on:click={correctFinalAssessment("schulinhalteabrufen")}>Korrigieren</button></td>
         </tr>
     </table>
     <button type="button" on:click={getText}>Text generieren</button>
+    <button type="button" on:click={correctFinalAssessment}>Korrigieren</button>
     </div>
 {/if}
 
@@ -251,10 +252,6 @@ $: {
 
       .notes {
         width: auto;
-      }
-
-      .correction {
-        width: 100px;
       }
 
       .mybutton {

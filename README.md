@@ -56,14 +56,14 @@ The notes of the different teachers are combined to a note-suggestion, but you a
 The final-assessment will be stored with the rest of the semester-data to the Database
 
 ## Finaler Text
-Here you can choose a student and all the semesters with a final assessment. (TODO)
+Here you can choose a student and all the semesters with a final assessment.
 You can see an overview of the final assessment.
-You have the possibility to correct something, if you are not yet happy (TODO)
-If the final-assessment is ok, you can create a text. (TODO)
+You have the possibility to correct something, if you are not yet happy.
+If the final-assessment is ok, you can create a text.
 The text is created with the openai-API.
 I used prompt engineering with a few shot dataset.
 All entries are anonymized, so there will be no name sent to openai.
-The text will be displayed in the frontend with the name.
+The text will be displayed in the frontend with the name. (TODO)
 If you are not yet happy with the text, you can write your own prompt to give openai specific information, how you would like to change the text.
-You can also write your own text.
+You can also write your own text. (TODO)
 If you are happy with the text, it will be stored in the Database with the rest of the semester-data.
