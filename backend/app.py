@@ -6,6 +6,7 @@ from typing import Dict, Any
 # Importing your database handler functions
 from src.db_handler import *
 from src.openai_handler import *
+from src.text_similarity import *
 
 
 cors_config = CORSConfig(allow_origins=["http://localhost:8081"])
@@ -88,13 +89,27 @@ async def create_assessment_data(request:Request) -> dict:
 
 ################################# COMBINE #################################
 
-@get("/get-all-assessments-data/{semester_id:str}")
-async def get_all_assessments_data(semester_id:str) -> Dict[str, Any]:
+@post("/get-all-assessments-data/{semester_id:str}")
+async def get_all_assessments_data(semester_id:str, request:Request) -> Dict[str, Any]:
+    student = await request.json()
     data = get_all_assessments(semester_id)
+    notes = get_recommendation_notes(student, data)
     return dict(
         status="success",
         message=f"Found all assessments for semester with id {semester_id}",
-        data=data
+        data=data,
+        notes=notes
+    )
+
+
+@post("/get-notes-similarity")
+async def get_notes_similarity(request:Request) -> Dict[str, Any]:
+    data = await request.json()
+    similarity = notes_similarity(data)
+    return dict(
+        status="success",
+        message=f"Similarity calculated",
+        similarity=similarity
     )
 
 
@@ -121,8 +136,8 @@ async def get_all_semesters_with_final_assessments(student_id:str) -> Dict[str, 
     )
 
 
-@post("/generate-text")
-async def get_text_recommendation(request:Request) -> Dict[str, Any]:
+@post("/generate-first-text")
+async def get_first_text(request:Request) -> Dict[str, Any]:
     data = await request.json()    
     answer, chain = get_text(data)
     return dict(
@@ -132,6 +147,30 @@ async def get_text_recommendation(request:Request) -> Dict[str, Any]:
         chain=chain,
     )
 
+
+@post("/generate-second-text")
+async def get_second_text(request:Request) -> Dict[str, Any]:
+    data = await request.json()    
+    answer, chain = get_other_text(data)
+    return dict(
+        status="success",
+        message=f"Created Text",
+        answer=answer,
+        chain=chain,
+    )
+
+
+@post("/get-text-similarity")
+async def get_text_similarity(request:Request) -> Dict[str, Any]:
+    data = await request.json()
+    similarity = text_similarity(data)
+    print(similarity)
+    return dict(
+        status="success",
+        message=f"Similarity calculated",
+        similarity=similarity
+    )
+    
 
 @put("/create-final-text-data/{semester_id:str}")
 async def create_final_text_data(semester_id:str, request:Request) -> dict:
@@ -156,7 +195,10 @@ app = Litestar(
         get_all_assessments_data,
         create_final_assessment_data,
         get_all_semesters_with_final_assessments,
-        get_text_recommendation,
+        get_notes_similarity,
+        get_first_text,
+        get_second_text,
+        get_text_similarity,
         create_final_text_data,
     ], cors_config=cors_config
 )

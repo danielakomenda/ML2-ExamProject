@@ -10,15 +10,25 @@ $: {
     let semesters=[]
     let semester={}
     let final_assessment={}
+    let chain = []
     let student_id
     let semester_id
-    let text=''
-    let prompt=''
+    let firstText=''
+    let secondText=''
+    let manualText=''
+    let final_text=''
+    let prompt
+    let similarity
 
     let visible=false
     let textVisible=false
     let promptVisible=false
+    let secondTextVisible=false
+    let manualTextVisible=false
 
+
+
+    //////////////////////// GET ALL STUDENTS /////////////////////////
     async function getAllPupils() {
         const response = await fetch('http://localhost:8000/get-all-pupils-data/', {
             method: 'GET',
@@ -36,6 +46,7 @@ $: {
     }
 
 
+    //////////////////////// GET SPECIFIC STUDENT /////////////////////////
     async function getPupil() {
         const response = await fetch('http://localhost:8000/get-pupil-data/' + student_id, {
             method: 'GET',
@@ -53,6 +64,7 @@ $: {
     }
 
 
+    //////////////////////// GET ALL SEMESTERS OF THE STUDENT WITH A FINAL ASSESSMENT /////////////////////////
     async function getSemestersWithFinalAssessment() {
         const response = await fetch('http://localhost:8000/semesters-with-final-assessment/' + student_id, {
             method: 'GET',
@@ -70,6 +82,7 @@ $: {
     }
 
 
+    //////////////////////// GET SPECIFIC SEMESTER /////////////////////////
     async function getSemester() {
         const response = await fetch('http://localhost:8000/get-semester-data/' + semester_id, {
             method: 'GET',
@@ -90,17 +103,19 @@ $: {
     }
 
 
+    //////////////////////// GO BACK TO COMBINE, TO CORRECT THE FINAL ASSESSMENT /////////////////////////
     function correctFinalAssessment() {
         push('/combine/' +semester_id +"/" +student_id);
     }
 
 
-    async function getText() {
+    //////////////////////// GET TEXT FROM OPENAI /////////////////////////
+    async function getFirstText() {
         const data = {
             semester:semester,
             student:student,
         }
-        const response = await fetch('http://localhost:8000/generate-text', {
+        const response = await fetch('http://localhost:8000/generate-first-text', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -108,7 +123,8 @@ $: {
             body: JSON.stringify(data)
         });
         const responseData = await response.json();
-        text = responseData.answer
+        firstText = responseData.answer
+        chain = responseData.chain
         console.log(final_assessment.allgemeines_lernen)
         textVisible = true
         if (response.ok) {
@@ -118,8 +134,60 @@ $: {
         }
     }
 
+    //////////////////////// GET CORRECTED TEXT FROM OPENAI /////////////////////////
+    async function getSecondText() {
+        const data = {
+            semester:semester,
+            student:student,
+            chain:chain,
+            prompt:prompt,
+        }
+        const response = await fetch('http://localhost:8000/generate-first-text', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        const responseData = await response.json();
+        secondText = responseData.answer
+        chain = responseData.chain
+        console.log(chain)
+        secondTextVisible = true
+        if (response.ok) {
+            console.log('Success:', responseData);
+        } else {
+            console.error('Failed to find student:', responseData);
+        }
+    }
 
-    async function createFinalText() {
+
+  //////////////////////// GET SIMILARITY OF THE RECOMMENDED AND MANUALLY CREATED TEXT /////////////////////////
+  async function getTextSimilarity() {
+    const data = {
+        recommended:firstText,
+        manually:manualText
+    };
+    const response = await fetch("http://localhost:8000/get-text-similarity", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    const responseData = await response.json();
+    similarity = responseData.similarity
+    console.log(similarity)
+    if (response.ok) {
+      console.log("Success:", responseData);
+    } else {
+      console.error("Failed to create entry:", responseData);
+    }
+  }
+
+
+    //////////////////////// STORE TEXT TO DATABASE /////////////////////////
+    async function createFinalText(text) {
         const finalText = {
             "allgemeines_lernen": text,
         };
@@ -133,12 +201,10 @@ $: {
         const responseData = await response.json();
         if (response.ok) {
             console.log('Success:', responseData);
+            alert("Die Cosine-Similarity zwischen Deinem Text und dem Text von OpenAI beträgt "+similarity+".")
             if (confirm('Möchtest Du einen weiteren Schüler beurteilen?')){
                 cancel()
                 push('/assessment')
-            }
-            else {
-                push('/combine')
             }
         } else {
              console.error('Failed to create entry:', responseData);
@@ -146,19 +212,14 @@ $: {
     }
 
 
-    function getFirstText() {
-
-    }
-
-
     function changePromptVisibility() {
         promptVisible=true
     }
 
-
-    function sendPrompt() {
-
+    function changeManualTextVisible() {
+        manualTextVisible=true
     }
+
 
 </script>
 
@@ -208,7 +269,7 @@ $: {
             <td>{final_assessment.allgemeines_lernen.SchulinhalteAbrufen.notes}</td>
         </tr>
     </table>
-    <button type="button" on:click={getText}>Text generieren</button>
+    <button type="button" on:click={getFirstText}>Text generieren</button>
     <button type="button" on:click={correctFinalAssessment}>Korrigieren</button>
     </div>
 {/if}
@@ -223,10 +284,10 @@ $: {
                 </tr>
                 <tr class="styleless">
                     <td class="generatedText styleless">
-                        {text}
+                        {firstText}
                     </td>
                     <td class="styleless">
-                    <button type="button" class="mybutton" on:click={createFinalText}>Beenden</button>
+                    <button type="button" class="mybutton" on:click={createFinalText(firstText)}>Beenden</button>
                     <button type="button" class="mybutton" on:click={changePromptVisibility}>Korrigieren</button>
                     </td>
                 </tr>
@@ -235,8 +296,33 @@ $: {
                         <td class="styleless"></td>
                         <td class="styleless prompt">
                             <input type="text" bind:value={prompt} placeholder="Was möchtest du ändern?">
+                            <button type="button" class="mybutton" on:click={getSecondText}>Send</button>
                         </td>
                     </tr>
+                {/if}
+                {#if secondTextVisible}
+                <tr class="styleless">
+                    <th class="generatedTextHeader styleless"></th>
+                    <th class="promptHeader styleless"></th>
+                </tr>
+                <tr class="styleless">
+                    <td class="generatedText styleless">
+                        {secondText}
+                    </td>
+                    <td class="styleless">
+                    <button type="button" class="mybutton" on:click={createFinalText(secondText)}>Beenden</button>
+                    <button type="button" class="mybutton" on:click={changeManualTextVisible}>Eigener Text</button>
+                    </td>
+                </tr>
+                {/if}
+                {#if manualTextVisible}
+                <tr class="styleless">
+                    <td class="styleless"></td>
+                    <td class="styleless prompt">
+                        <input type="text" bind:value={manualText} placeholder="Was möchtest du ändern?">
+                        <button type="button" class="mybutton" on:click={getTextSimilarity} on:click={createFinalText(manualText)}>Send</button>
+                    </td>
+                </tr>
                 {/if}
             </table>
         </div>

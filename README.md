@@ -52,7 +52,8 @@ All the assessment are stored in a seperate collection in the Database.
 Here you can choose a student and a semester.
 You can see all the assessment that have been done for a given student and semester.
 You can decide how you would like to create the final assessment.
-The notes of the different teachers are combined to a note-suggestion, but you are free to create another note-entry. (TODO)
+The notes of the different teachers are combined to a note-suggestion, but you are free to create another note-entry.
+If you write your own note the Cosine-Similarity will be calculated between the openAI-recommended-note and your own one.
 The final-assessment will be stored with the rest of the semester-data to the Database
 
 ## Finaler Text
@@ -63,7 +64,8 @@ If the final-assessment is ok, you can create a text.
 The text is created with the openai-API.
 I used prompt engineering with a few shot dataset.
 All entries are anonymized, so there will be no name sent to openai.
-The text will be displayed in the frontend with the name. (TODO)
-If you are not yet happy with the text, you can write your own prompt to give openai specific information, how you would like to change the text.
-You can also write your own text. (TODO)
+The text will be displayed in the frontend with the name.
+If you are not yet happy with the text, you can write your own prompt to give openai specific information, how you would like to change the text. (TODO)
+You can also write your own text.
+If you write your own text the Cosine-Similarity will be calculated between the openAI-recommended-text and your own one.
 If you are happy with the text, it will be stored in the Database with the rest of the semester-data.

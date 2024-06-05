@@ -89,8 +89,6 @@ def get_semester(semester_id):
 
 
 def insert_assessement(data):
-    print("Checkpoint: ", data)
-    
     collection = connect_to_db("Assessment_Data")
     data["student_id"]=ObjectId(data["student_id"])
     data["semester_id"]=ObjectId(data["semester_id"])

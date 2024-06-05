@@ -16,15 +16,15 @@ $: {
 
     let author
     let AktivTeilnehmen=''
-    let AktivTeilnehmenNotizen=''
+    let AktivTeilnehmenNotizen=null
     let LeistungZeigen=''
-    let LeistungZeigenNotizen=''
+    let LeistungZeigenNotizen=null
     let AufmerksamSein=''
-    let AufmerksamSeinNotizen=''
+    let AufmerksamSeinNotizen=null
     let SchulinhalteMerken=''
-    let SchulinhalteMerkenNotizen=''
+    let SchulinhalteMerkenNotizen=null
     let SchulinhalteAbrufen=''
-    let SchulinhalteAbrufenNotizen=''
+    let SchulinhalteAbrufenNotizen=null
 
 
     async function getAllPupils() {
