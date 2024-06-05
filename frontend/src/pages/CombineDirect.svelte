@@ -57,8 +57,6 @@
         });
         const responseData = await response.json();
         semester = responseData.data
-
-
         AktivTeilnehmen=semester.final_assessment.allgemeines_lernen.AktivTeilnehmen.assessment
         AktivTeilnehmenNotizen=semester.final_assessment.allgemeines_lernen.AktivTeilnehmen.notes
         LeistungZeigen=semester.final_assessment.allgemeines_lernen.LeistungZeigen.assessment
@@ -69,8 +67,6 @@
         SchulinhalteMerkenNotizen=semester.final_assessment.allgemeines_lernen.SchulinhalteMerken.notes
         SchulinhalteAbrufen=semester.final_assessment.allgemeines_lernen.SchulinhalteAbrufen.assessment
         SchulinhalteAbrufenNotizen=semester.final_assessment.allgemeines_lernen.SchulinhalteAbrufen.notes
-
-
         if (response.ok) {
             console.log('Success:', responseData);
         } else {
