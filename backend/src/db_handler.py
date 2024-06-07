@@ -150,7 +150,10 @@ def insert_final_text(semester_id, data):
 
 
 def store_validation(data):
+    date = datetime.datetime.now()
+    data = dict(data)
+    data["date"] = date
     collection = connect_to_db("Similarity")
-    entry = collection.insert_one(data)
-    return serialize_obj(entry)
+    collection.insert_one(data)
+    return serialize_obj(data)
     

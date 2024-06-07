@@ -29,7 +29,7 @@ I use prompt engineering with a few-shot approach, allowing OpenAI to understand
 ## Interpretation and Validation
 Whenever a teacher opts for a text other than the one recommended by OpenAI, the cosine similarity between the two texts is calculated. A high similarity score indicates that OpenAI's output closely meets the report requirements set by the teachers. Conversely, a low score suggests inadequacies in the prompts or few-shot examples used, signaling a need for adjustment. Both the initial and manually chosen texts are stored in the database, along with the similarity scores and timestamps. This data is archived for future analysis to enhance the web application's functionality.
 
-To evaluate the effectiveness of the prompt engineering, I used historical texts and assessments, sending them anonymously to OpenAI for text generation. These generated texts were then compared with the original texts focused on specific criteria. Since only a subset of the criteria was relevant, it was necessary to extract just the pertinent sections.
+To evaluate the effectiveness of the prompt engineering, I used historical texts and assessments, sending them anonymously to OpenAI for text generation. These generated texts were then compared with the original texts focused on specific criteria. Since only a subset of the criteria was relevant for this webapp, it was necessary to extract just the matching sections.
 
 
 
@@ -43,7 +43,7 @@ To evaluate the effectiveness of the prompt engineering, I used historical texts
 
 
 ## 2. Get Access to DB nd API
-- Create a File with the name .env with the following:
+- Create a File with the name .env on the toplevel of the project (same folder as requirements.txt) with the following:
     - MONGODB_URI=<your own mongodb-uri> <-- if you don't have one, you can create one for free
     - OPENAI_APIKEY=<openai-api-key> <-- if you don't have one, contact me
 
@@ -51,7 +51,7 @@ To evaluate the effectiveness of the prompt engineering, I used historical texts
 ## 3. reate Dummy-Data
 - Kernel: Python 3.11 or higher
 - Run Jupyter Notebook "Dummy-Data-Input"
-- Check your MongoDB, if you can find 3 collections and Data in each collection
+- Check your MongoDB, if you can find 3 collections and data in each collection
 
 
 ## 4. Run Backend-Server
@@ -61,6 +61,7 @@ To evaluate the effectiveness of the prompt engineering, I used historical texts
 
 
 ## 5. Run Frontend
+- Open a second terminal
 - Go to directory: cd frontend
 - Install dependencies: npm install
 - Start frontend: npm run dev
@@ -90,7 +91,9 @@ To evaluate the effectiveness of the prompt engineering, I used historical texts
 - Click "Send"
     - -> You will see the similarity between your text and the first text from OpenAI
     - -> Your text will be stored in the Database
+    - -> The similarity will be stored in a new Collection in MongoDB
 - Click "OK"
+
 
 ## 7. Experiment
 - You can try out different Use-Cases
@@ -131,14 +134,9 @@ You can also write your own text.
 If you write your own text the Cosine-Similarity will be calculated between the openAI-recommended-text and your own one.
 If you are happy with the text, it will be stored in the Database with the rest of the semester-data.
 
-
-
-## Student
-If you'd like to create your own student, you can use '/base-data'-URL.
-
-## Semester
-If you'd like to create your own semester, you can use '/semester-data'-URL.
-
+## Additional Pages
+- Student: If you'd like to create your own student, you can use '/base-data'-URL.
+- Semester: If you'd like to create your own semester, you can use '/semester-data'-URL.
 
 
 

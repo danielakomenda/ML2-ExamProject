@@ -195,7 +195,7 @@ async def store_similarity_data(request:Request) -> dict:
     return dict(
         status="success",
         message=f"Added validation to DB",
-        entry=entry,
+        data=data,
     )
 
 
