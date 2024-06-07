@@ -188,6 +188,18 @@ async def create_final_text_data(semester_id:str, request:Request) -> dict:
     )
 
 
+@post("/store-similarity")
+async def store_similarity_data(request:Request) -> dict:
+    data = await request.json()
+    entry = store_validation(data)
+    return dict(
+        status="success",
+        message=f"Added validation to DB",
+        entry=entry,
+    )
+
+
+
 app = Litestar(
     [
         create_base_data_entry,
@@ -206,5 +218,6 @@ app = Litestar(
         get_second_text_recommendation,
         get_text_similarity,
         create_final_text_data,
+        store_similarity_data,
     ], cors_config=cors_config
 )

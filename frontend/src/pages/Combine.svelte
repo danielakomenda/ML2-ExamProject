@@ -1,6 +1,6 @@
 <script>
   import { push } from "svelte-spa-router";
-  import { tick } from 'svelte';
+  import { tick } from "svelte";
 
   $: {
     getAllPupils();
@@ -31,7 +31,7 @@
   let SchulinhalteAbrufen = "";
   let SchulinhalteAbrufenNotizen = "";
 
-  //////////////////////// GET ALL STUDENTS /////////////////////////
+  ///////////////////////////// GET ALL STUDENTS //////////////////////////////
   async function getAllPupils() {
     const response = await fetch("http://localhost:8000/get-all-pupils-data/", {
       method: "GET",
@@ -44,11 +44,11 @@
       console.log("Success:", responseData);
       students = responseData.data;
     } else {
-      console.error("Failed to find pupil:", responseData);
+      console.error("Failed to find students:", responseData);
     }
   }
 
-  //////////////////////// GET ALL SEMESTERS OF THE GIVEN STUDENT /////////////////////////
+  ////////////////// GET ALL SEMESTERS OF THE GIVEN STUDENT ///////////////////
   async function getSemestersOfPupil() {
     if (student_id) {
       const response = await fetch("http://localhost:8000/get-all-semesters-data/" + student_id, {
@@ -69,7 +69,7 @@
     }
   }
 
-  //////////////////////// GET ALL ASSESSMENTS FOR THE GIVEN SEMESTER /////////////////////////
+  //////////////// GET ALL ASSESSMENTS FOR THE GIVEN SEMESTER /////////////////
   async function getAllAssessments() {
     if (semester_id) {
       const response = await fetch("http://localhost:8000/get-all-assessments-data/" + semester_id, {
@@ -83,11 +83,11 @@
         if (responseData.data.length > 0) {
           console.log("Success:", responseData);
           assessments = responseData.data;
-            if (confirm("Möchtest Du für Notizen der Lehrpersonen von OpenAI einen Textvorschlag erhalten?")) {
+          if (confirm("Möchtest Du für Notizen der Lehrpersonen von OpenAI einen Textvorschlag erhalten?")) {
             getNoteRecommendation();
-            }
+          }
         } else {
-          if (!(confirm("Für dieses Semester gibt es noch keine Bewertungen. Möchtest Du trotzdem fortfahren?"))) {
+          if (!confirm("Für dieses Semester gibt es noch keine Bewertungen. Möchtest Du trotzdem fortfahren?")) {
             push("/assessment");
           }
         }
@@ -100,7 +100,7 @@
     }
   }
 
-  //////////////////////// GET ALL ASSESSMENTS FOR THE GIVEN SEMESTER /////////////////////////
+  //////////////////// GET SUGGESTIONS FOR TEACHERS NOTES /////////////////////
   async function getNoteRecommendation() {
     for (let stud of students) {
       if (stud["_id"] === student_id) {
@@ -130,11 +130,11 @@
         SchulinhalteAbrufenNotizen = recommendation.SchulinhalteAbrufen;
       }
     } else {
-      console.error("Failed to find assessment:", responseData);
+      console.error("Failed to get suggestion for teacher's notes:", responseData);
     }
   }
 
-  //////////////////////// GET SIMILARITY OF ALL THE NOTES /////////////////////////
+  ////////////////////// GET SIMILARITY OF ALL THE NOTES ///////////////////////
   async function getTextSimilarity() {
     const data = {
       recommended: recommendation,
@@ -161,13 +161,13 @@
       similarity = responseData.similarity;
       console.log(similarity);
       await tick();
-      scroll("bestaetigen")
+      scroll("bestaetigen");
     } else {
-      console.error("Failed to create entry:", responseData);
+      console.error("Failed to get similarity:", responseData);
     }
   }
 
-  //////////////////////// CREATE FINAL ASSESSMENT /////////////////////////
+  ////////////////////////// CREATE FINAL ASSESSMENT ///////////////////////////
   async function createFinalAssessment() {
     const assessment_data = {
       allgemeines_lernen: {
@@ -204,11 +204,11 @@
     if (response.ok) {
       console.log("Success:", responseData);
       if (confirm("Möchtest Du den Text generieren lassen?")) {
-        push("/create-text/"+semester_id+"/"+student_id);
+        push("/create-text/" + semester_id + "/" + student_id);
       } else {
         if (confirm("Möchtest Du eine weitere Beurteilung finalisieren?")) {
-        cancel();
-        push("/combine");
+          cancel();
+          push("/combine");
         }
       }
     } else {
@@ -216,24 +216,7 @@
     }
   }
 
-  //////////////////////// DELETE ALL THE FORM-DATA /////////////////////////
-  function cancel() {
-    if (confirm("Möchten Du das Formular wirklich leeren?")) {
-      author = "";
-      AktivTeilnehmen = "";
-      AktivTeilnehmenNotizen = "";
-      LeistungZeigen = "";
-      LeistungZeigenNotizen = "";
-      AufmerksamSein = "";
-      AufmerksamSeinNotizen = "";
-      SchulinhalteMerken = "";
-      SchulinhalteMerkenNotizen = "";
-      SchulinhalteAbrufen = "";
-      SchulinhalteAbrufenNotizen = "";
-    }
-  }
-
-  //////////////////////// CHECK IF ALL REQUIRED ANSWERS ARE THERE /////////////////////////
+  ////////////////// CHECK IF ALL REQUIRED ANSWERS ARE THERE ///////////////////
   function checkAnswers() {
     if (AktivTeilnehmen === "") {
       alert("Bitte eine Bewertung eingeben.");
@@ -255,13 +238,30 @@
     }
   }
 
-  //////////////////////// SCROLL TO ID /////////////////////////
+  /////////////////////////////// SCROLL TO ID ////////////////////////////////
   function scroll(id) {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       console.error("Element with ID " + id + " not found.");
+    }
+  }
+
+  ///////////////////////// DELETE ALL THE FORM-DATA //////////////////////////
+  function cancel() {
+    if (confirm("Möchten Du das Formular wirklich leeren?")) {
+      author = "";
+      AktivTeilnehmen = "";
+      AktivTeilnehmenNotizen = "";
+      LeistungZeigen = "";
+      LeistungZeigenNotizen = "";
+      AufmerksamSein = "";
+      AufmerksamSeinNotizen = "";
+      SchulinhalteMerken = "";
+      SchulinhalteMerkenNotizen = "";
+      SchulinhalteAbrufen = "";
+      SchulinhalteAbrufenNotizen = "";
     }
   }
 </script>
@@ -870,12 +870,8 @@
         <button type="submit">Bestätigen</button>
       </div>
     {/if}
-    <div id="bestaetigen">
-
-    </div>
+    <div id="bestaetigen" />
   </form>
-
-
 </div>
 
 <style>

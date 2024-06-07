@@ -8,11 +8,11 @@
   let students = [];
   let semesters = [];
   let semester = {};
-  let student = {}
+  let student = {};
 
   let student_id;
   let semester_id;
-  let firstname
+  let firstname;
 
   let visible = false;
 
@@ -28,8 +28,7 @@
   let SchulinhalteAbrufen = "";
   let SchulinhalteAbrufenNotizen = null;
 
-
-  //////////////////////// GET ALL STUDENTS /////////////////////////
+  ///////////////////////////// GET ALL STUDENTS //////////////////////////////
   async function getAllPupils() {
     const response = await fetch("http://localhost:8000/get-all-pupils-data/", {
       method: "GET",
@@ -46,50 +45,85 @@
     }
   }
 
-
-    //////////////////////// GET SPECIFIC STUDENTS /////////////////////////
-      async function getPupil() {
-        if (student_id){
-        const response = await fetch('http://localhost:8000/get-pupil-data/' + student_id, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        });
-        const responseData = await response.json();
-        if (response.ok) {
-            console.log('Success:', responseData);
-            student = responseData.data
-            firstname = student.firstname
-        } else {
-            console.error('Failed to find student:', responseData);
-        }
+  /////////////////////////// GET SPECIFIC STUDENTS ////////////////////////////
+  async function getPupil() {
+    if (student_id) {
+      const response = await fetch("http://localhost:8000/get-pupil-data/" + student_id, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const responseData = await response.json();
+      if (response.ok) {
+        console.log("Success:", responseData);
+        student = responseData.data;
+        firstname = student.firstname;
+      } else {
+        console.error("Failed to find student:", responseData);
+      }
     }
-    }
-  
-
-    //////////////////////// GET SEMESTER OF SPECIFIC STUDENTS /////////////////////////
-  async function getSemestersOfPupil() {
-    if (student_id){
-    const response = await fetch("http://localhost:8000/get-all-semesters-data/" + student_id, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const responseData = await response.json();
-    if (response.ok) {
-      console.log("Success:", responseData);
-      semesters = responseData.data;
-    } else {
-      console.error("Failed to find student:", responseData);
-    }
-} else {
-    console.log("No student selected")
-}
   }
 
+  ///////////////////// GET SEMESTER OF SPECIFIC STUDENTS //////////////////////
+  async function getSemestersOfPupil() {
+    if (student_id) {
+      const response = await fetch("http://localhost:8000/get-all-semesters-data/" + student_id, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const responseData = await response.json();
+      if (response.ok) {
+        console.log("Success:", responseData);
+        semesters = responseData.data;
+      } else {
+        console.error("Failed to find student:", responseData);
+      }
+    } else {
+      console.log("No student selected");
+    }
+  }
 
+  /////////////////////////// GET SPECIFIC SEMESTER ////////////////////////////
+  async function getSemester() {
+    if (semester_id) {
+      const response = await fetch("http://localhost:8000/get-semester-data/" + semester_id, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const responseData = await response.json();
+      if (response.ok) {
+        semester = responseData.data;
+        if (semester.final_assessment) {
+          if (
+            confirm(
+              "Für dieses Semester gibt es bereits eine Finale-Beurteilung für den Schüler.\nMöchtest Du trotzdem eine neue Beurteilung schreiben?"
+            )
+          ) {
+            visible = true;
+          }
+        } else {
+          visible = true;
+        }
+        console.log("Success:", responseData);
+      } else {
+        console.error("Failed to find student:", responseData);
+      }
+    } else {
+      console.log("No semester selected");
+    }
+  }
+
+  //////////////////////////// CREATE NEW SEMESTER /////////////////////////////
+  async function newSemester() {
+    push("/semester-data");
+  }
+
+  ///////////////// GET SPECIFIC SEMESTER OR CREATE A NEW ONE //////////////////
   function handleSemesterChange() {
     if (semester_id === "new") {
       newSemester();
@@ -98,38 +132,7 @@
     }
   }
 
-  async function getSemester() {
-    if (semester_id){
-    const response = await fetch("http://localhost:8000/get-semester-data/" + semester_id, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const responseData = await response.json();
-
-    if (response.ok) {
-      semester = responseData.data;
-      if (semester.final_assessment) {
-        if (confirm("Für dieses Semester gibt es bereits eine Finale-Beurteilung für den Schüler.\nMöchtest Du trotzdem eine neue Beurteilung schreiben?")){
-            visible = true;
-        }
-      } else {
-        visible = true;
-      }
-      console.log("Success:", responseData);
-    } else {
-      console.error("Failed to find student:", responseData);
-    }
-} else {
-    console.log("No semester selected")
-}
-  }
-
-  async function newSemester() {
-    push("/semester-data");
-  }
-
+  /////////////////////// STORE ASSESSMENT IN DATABASE ////////////////////////
   async function createAssessment() {
     const assessment_data = {
       student_id: student_id,
@@ -169,7 +172,7 @@
     if (response.ok) {
       console.log("Success:", responseData);
       if (confirm("Möchtest Du die Einschätzungen kombinieren?")) {
-        push("/combine/"+semester_id+"/"+student_id);
+        push("/combine/" + semester_id + "/" + student_id);
       } else {
         cancel();
         push("/assessment");
@@ -179,6 +182,7 @@
     }
   }
 
+  ///////////////////////// DELETE ALL THE FORM-DATA //////////////////////////
   function cancel() {
     if (confirm("Möchten Du das einen anderen Schüler / eine andere Schülerin beurteilen?")) {
       author = "";
@@ -199,7 +203,14 @@
 <div class="component">
   <h1>Einschätzungen</h1>
 
-  <select class="form-control" bind:value={student_id} on:change={getSemestersOfPupil} on:change={getPupil} id="student_id" required>
+  <select
+    class="form-control"
+    bind:value={student_id}
+    on:change={getSemestersOfPupil}
+    on:change={getPupil}
+    id="student_id"
+    required
+  >
     <option value="">Schüler</option>
     {#each students as student}
       <option value={student._id}>{student.firstname}</option>
@@ -218,42 +229,42 @@
     <div class="abschnitt">
       <h2>Semesterdaten</h2>
 
-        <table class="table">
-          <tr>
-            <th class="left">Semester</th>
-            <th class="right">Schüler/in</th>
-          <tr>
-            <td>
-                {semester.semester_name}
-            </td>
-            <td>
-                {firstname}
-              </td>
-          </tr>
-          <tr>
-            <th>Klassenstufe</th>
-            <th>Niveau</th>
-          <tr>
-            <td>
-                {semester.grade_level}
-              </td>
-              <td>
-                {semester.niveau}
-              </td>
-          </tr>
-          <tr>
-            <th>Letztes Standortgespräch</th>
-            <th>Letzter Bericht</th>
-          <tr>
-            <td>
-                {semester.last_progress_talk}
-              </td>
-              <td>
-                {semester.last_report}
-              </td>
-          </tr>
-        </table>
-        </div>
+      <table class="table">
+        <tr>
+          <th class="left">Semester</th>
+          <th class="right">Schüler/in</th>
+        </tr><tr>
+          <td>
+            {semester.semester_name}
+          </td>
+          <td>
+            {firstname}
+          </td>
+        </tr>
+        <tr>
+          <th>Klassenstufe</th>
+          <th>Niveau</th>
+        </tr><tr>
+          <td>
+            {semester.grade_level}
+          </td>
+          <td>
+            {semester.niveau}
+          </td>
+        </tr>
+        <tr>
+          <th>Letztes Standortgespräch</th>
+          <th>Letzter Bericht</th>
+        </tr><tr>
+          <td>
+            {semester.last_progress_talk}
+          </td>
+          <td>
+            {semester.last_report}
+          </td>
+        </tr>
+      </table>
+    </div>
 
     <form on:submit|preventDefault={createAssessment}>
       <div class="abschnitt">
@@ -602,7 +613,8 @@
     padding-bottom: 10px;
   }
 
-  .left, .right {
+  .left,
+  .right {
     width: 50%;
   }
 </style>

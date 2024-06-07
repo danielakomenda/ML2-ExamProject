@@ -27,7 +27,7 @@
   let secondTextVisible = false;
   let manualTextVisible = false;
 
-  //////////////////////// GET ALL STUDENTS /////////////////////////
+  ///////////////////////////// GET ALL STUDENTS //////////////////////////////
   async function getAllPupils() {
     const response = await fetch("http://localhost:8000/get-all-pupils-data/", {
       method: "GET",
@@ -40,11 +40,11 @@
       console.log("Success:", responseData);
       students = responseData.data;
     } else {
-      console.error("Failed to find any students:", responseData);
+      console.error("Failed to find students:", responseData);
     }
   }
 
-  //////////////////////// GET SPECIFIC STUDENT /////////////////////////
+  /////////////////////////// GET SPECIFIC STUDENT ////////////////////////////
   async function getPupil() {
     const response = await fetch("http://localhost:8000/get-pupil-data/" + student_id, {
       method: "GET",
@@ -61,7 +61,7 @@
     }
   }
 
-  //////////////////////// GET ALL SEMESTERS OF THE STUDENT WITH A FINAL ASSESSMENT /////////////////////////
+  ///////// GET ALL SEMESTERS OF THE STUDENT WITH A FINAL ASSESSMENT //////////
   async function getSemestersWithFinalAssessment() {
     const response = await fetch("http://localhost:8000/semesters-with-final-assessment/" + student_id, {
       method: "GET",
@@ -74,11 +74,11 @@
       console.log("Success:", responseData);
       semesters = responseData.data;
     } else {
-      console.error("Failed to find student:", responseData);
+      console.error("Failed to find semesters:", responseData);
     }
   }
 
-  //////////////////////// GET SPECIFIC SEMESTER /////////////////////////
+  /////////////////////////// GET SPECIFIC SEMESTER ////////////////////////////
   async function getSemester() {
     const response = await fetch("http://localhost:8000/get-semester-data/" + semester_id, {
       method: "GET",
@@ -98,16 +98,11 @@
         );
       }
     } else {
-      console.error("Failed to find student:", responseData);
+      console.error("Failed to find semester:", responseData);
     }
   }
 
-  //////////////////////// GO BACK TO COMBINE, TO CORRECT THE FINAL ASSESSMENT /////////////////////////
-  function correctFinalAssessment() {
-    push("/combine/" + semester_id + "/" + student_id);
-  }
-
-  //////////////////////// GET TEXT FROM OPENAI /////////////////////////
+  /////////////////////////// GET TEXT FROM OPENAI ////////////////////////////
   async function getFirstText() {
     const data = {
       semester: semester,
@@ -125,14 +120,13 @@
       console.log("Success:", responseData);
       firstText = responseData.answer;
       chain = responseData.chain;
-      console.log(final_assessment.allgemeines_lernen);
       textVisible = true;
     } else {
-      console.error("Failed to find student:", responseData);
+      console.error("Failed to get text:", responseData);
     }
   }
 
-  //////////////////////// GET CORRECTED TEXT FROM OPENAI /////////////////////////
+  ////////////////////// GET CORRECTED TEXT FROM OPENAI ///////////////////////
   async function getSecondText() {
     const data = {
       semester: semester,
@@ -152,14 +146,13 @@
       console.log("Success:", responseData);
       secondText = responseData.answer;
       chain = responseData.chain;
-      console.log(chain);
       secondTextVisible = true;
     } else {
       console.error("Failed to get text:", responseData);
     }
   }
 
-  //////////////////////// GET SIMILARITY OF THE RECOMMENDED AND MANUALLY CREATED TEXT /////////////////////////
+  //////// GET SIMILARITY OF THE RECOMMENDED AND MANUALLY CREATED TEXT /////////
   async function getTextSimilarity() {
     const data = {
       recommended: firstText,
@@ -176,13 +169,12 @@
     if (response.ok) {
       console.log("Success:", responseData);
       similarity = responseData.similarity;
-      console.log(similarity);
     } else {
-      console.error("Failed to create entry:", responseData);
+      console.error("Failed to get similarity:", responseData);
     }
   }
 
-  //////////////////////// STORE TEXT TO DATABASE /////////////////////////
+  ////////////////////////// STORE TEXT TO DATABASE ///////////////////////////
   async function createFinalText(text) {
     const finalText = {
       allgemeines_lernen: text,
@@ -198,20 +190,51 @@
     if (response.ok) {
       console.log("Success:", responseData);
       if (manualText) {
-        alert("Die Cosine-Similarity zwischen Deinem Text und dem Text von OpenAI beträgt " + similarity + ".\nDer Text wurde in der Datenbank gespeichert.");
+        await getTextSimilarity();
+        storeSimilarity();
+        alert(
+          "Die Cosine-Similarity zwischen Deinem Text und dem Text von OpenAI beträgt " +
+            similarity +
+            ".\nDer Text wurde in der Datenbank gespeichert."
+        );
       }
       if (confirm("Möchtest Du einen weiteren Text generieren?")) {
         cancel();
         push("/create-text");
+      } else {
+        cancel();
+        alert("Du kannst eine weitere Beurteilung machen.");
+        push("/assessment");
       }
-      cancel();
-      alert("Du kannst eine weitere Beurteilung machen.")
-      push("/assessment");
     } else {
       console.error("Failed to create entry:", responseData);
     }
   }
 
+  ///////// STORE OPENAI-TEXT, MANUAL TEXT AND SIMILARITY TO DATABASE //////////
+  async function storeSimilarity() {
+    const data = {
+      firstText: firstText,
+      secondText: secondText,
+      manualText: manualText,
+      similarity: similarity,
+    };
+    const response = await fetch("http://localhost:8000/store-similarity", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    const responseData = await response.json();
+    if (response.ok) {
+      console.log("Success:", responseData);
+    } else {
+      console.error("Failed to create entry:", responseData);
+    }
+  }
+
+  ///////////////////////////// CHANGE VISIBILITY //////////////////////////////
   function changePromptVisibility() {
     promptVisible = true;
   }
@@ -220,6 +243,12 @@
     manualTextVisible = true;
   }
 
+  //////////// GO BACK TO COMBINE, TO CORRECT THE FINAL ASSESSMENT /////////////
+  function correctFinalAssessment() {
+    push("/combine/" + semester_id + "/" + student_id);
+  }
+
+  //////////////////////////// DELETE ALL ENTRIES /////////////////////////////
   function cancel() {
     semester = {};
     student = {};
@@ -237,7 +266,6 @@
     promptVisible = false;
     secondTextVisible = false;
     manualTextVisible = false;
-
   }
 </script>
 
@@ -344,12 +372,7 @@
               <td class="styleless" />
               <td class="styleless prompt">
                 <input type="text" rows="5" bind:value={manualText} placeholder="Was möchtest du ändern?" />
-                <button
-                  type="button"
-                  class="mybutton"
-                  on:click={getTextSimilarity}
-                  on:click={createFinalText(manualText)}>Send</button
-                >
+                <button type="button" class="mybutton" on:click={createFinalText(manualText)}>Send</button>
               </td>
             </tr>
           {/if}

@@ -147,3 +147,10 @@ def insert_final_text(semester_id, data):
     entry = {"$set": {"final_text": data}}
     collection.update_one(filter, entry, upsert=True)
     return serialize_obj(data)
+
+
+def store_validation(data):
+    collection = connect_to_db("Similarity")
+    entry = collection.insert_one(data)
+    return serialize_obj(entry)
+    

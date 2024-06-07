@@ -34,7 +34,7 @@
   let SchulinhalteAbrufen = "";
   let SchulinhalteAbrufenNotizen = "";
 
-  //////////////////////// GET ALL ASSESSMENTS DIRECTLY /////////////////////////
+  /////////////////////// GET ALL ASSESSMENTS DIRECTLY ////////////////////////
   async function getAllAssessmentsDirectly() {
     const response = await fetch("http://localhost:8000/get-all-assessments-data/" + semester_id, {
       method: "GET",
@@ -47,15 +47,15 @@
     if (response.ok) {
       getSemester();
       getPupil();
-        console.log("Success:", responseData);
-        assessments = responseData.data;
+      console.log("Success:", responseData);
+      assessments = responseData.data;
       formVisible = true;
     } else {
       console.error("Failed to find assessment:", responseData);
     }
   }
 
-  //////////////////////// GET SPECIFIC STUDENT /////////////////////////
+  /////////////////////////// GET SPECIFIC STUDENT ////////////////////////////
   async function getPupil() {
     const response = await fetch("http://localhost:8000/get-pupil-data/" + student_id, {
       method: "GET",
@@ -67,17 +67,17 @@
     student = responseData.data;
     if (response.ok) {
       console.log("Success:", responseData);
-      if (student && semester){
-      if (confirm("Möchtest Du für Notizen der Lehrpersonen von OpenAI einen Textvorschlag erhalten?")) {
+      if (student && semester) {
+        if (confirm("Möchtest Du für Notizen der Lehrpersonen von OpenAI einen Textvorschlag erhalten?")) {
           getNoteRecommendation();
         }
-    }
+      }
     } else {
       console.error("Failed to find student:", responseData);
     }
   }
 
-  //////////////////////// GET SPECIFIC SEMESTER /////////////////////////
+  /////////////////////////// GET SPECIFIC SEMESTER ////////////////////////////
   async function getSemester() {
     const response = await fetch("http://localhost:8000/get-semester-data/" + semester_id, {
       method: "GET",
@@ -94,7 +94,7 @@
     }
   }
 
-  //////////////////////// GET ALL ASSESSMENTS FOR THE GIVEN SEMESTER /////////////////////////
+  //////////////////// GET SUGGESTIONS FOR TEACHERS NOTES /////////////////////
   async function getNoteRecommendation() {
     const data = {
       student: student,
@@ -119,11 +119,11 @@
         SchulinhalteAbrufenNotizen = recommendation.SchulinhalteAbrufen;
       }
     } else {
-      console.error("Failed to find assessment:", responseData);
+      console.error("Failed to get suggestion for teacher's notes:", responseData);
     }
   }
 
-  //////////////////////// GET SIMILARITY OF ALL THE NOTES /////////////////////////
+  ////////////////////// GET SIMILARITY OF ALL THE NOTES ///////////////////////
   async function getTextSimilarity() {
     const data = {
       recommended: recommendation,
@@ -152,11 +152,11 @@
       await tick();
       scroll("bestaetigen");
     } else {
-      console.error("Failed to create entry:", responseData);
+      console.error("Failed to get similarity:", responseData);
     }
   }
 
-  //////////////////////// CREATE FINAL ASSESSMENT /////////////////////////
+  ////////////////////////// CREATE FINAL ASSESSMENT ///////////////////////////
   async function createFinalAssessment() {
     const assessment_data = {
       allgemeines_lernen: {
@@ -193,7 +193,7 @@
     if (response.ok) {
       console.log("Success:", responseData);
       if (confirm("Möchtest Du den Text generieren lassen?")) {
-        push("/create-text/"+semester_id+"/"+student_id);
+        push("/create-text/" + semester_id + "/" + student_id);
       } else {
         if (confirm("Möchtest Du eine weitere Beurteilung finalisieren?")) {
           cancel();
@@ -205,24 +205,7 @@
     }
   }
 
-  //////////////////////// DELETE ALL THE FORM-DATA /////////////////////////
-  function cancel() {
-    if (confirm("Möchten Du das Formular wirklich leeren?")) {
-      author = "";
-      AktivTeilnehmen = "";
-      AktivTeilnehmenNotizen = "";
-      LeistungZeigen = "";
-      LeistungZeigenNotizen = "";
-      AufmerksamSein = "";
-      AufmerksamSeinNotizen = "";
-      SchulinhalteMerken = "";
-      SchulinhalteMerkenNotizen = "";
-      SchulinhalteAbrufen = "";
-      SchulinhalteAbrufenNotizen = "";
-    }
-  }
-
-  //////////////////////// CHECK IF ALL REQUIRED ANSWERS ARE THERE /////////////////////////
+  ////////////////// CHECK IF ALL REQUIRED ANSWERS ARE THERE ///////////////////
   function checkAnswers() {
     if (AktivTeilnehmen === "") {
       alert("Bitte eine Bewertung eingeben.");
@@ -244,13 +227,30 @@
     }
   }
 
-  //////////////////////// SCROLL TO ID /////////////////////////
+  /////////////////////////////// SCROLL TO ID ////////////////////////////////
   function scroll(id) {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       console.error("Element with ID " + id + " not found.");
+    }
+  }
+
+  ///////////////////////// DELETE ALL THE FORM-DATA //////////////////////////
+  function cancel() {
+    if (confirm("Möchten Du das Formular wirklich leeren?")) {
+      author = "";
+      AktivTeilnehmen = "";
+      AktivTeilnehmenNotizen = "";
+      LeistungZeigen = "";
+      LeistungZeigenNotizen = "";
+      AufmerksamSein = "";
+      AufmerksamSeinNotizen = "";
+      SchulinhalteMerken = "";
+      SchulinhalteMerkenNotizen = "";
+      SchulinhalteAbrufen = "";
+      SchulinhalteAbrufenNotizen = "";
     }
   }
 </script>
