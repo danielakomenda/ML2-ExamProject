@@ -15,16 +15,6 @@
         They can specify changes via a prompt or rewrite the text themselves. The similarity between the OpenAI-generated text and the teacher's manually written text is evaluated.
         Once the final text is approved, it is stored in a MongoDB database.
     </p>
-
-    <h3>Stammdaten</h3>
-    <p>
-        Here, you can create a new student profile and add it to the database.
-    </p>
-    
-    <h3>Semesterdaten</h3>
-    <p>
-        Here, you can create a new semester dataset for a specific student.
-    </p>
     
     <h3>Beurteilen</h3>
     <p>

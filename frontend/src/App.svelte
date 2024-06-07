@@ -16,12 +16,6 @@
                             <a class="nav-link" aria-current="page" href="#/">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#/base-data">Stammdaten</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#/semester-data">Semester-Daten</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link" href="#/assessment">Beurteilen</a>
                         </li>
                         <li class="nav-item">
@@ -62,14 +56,13 @@
   }
 
   .navbar-collapse {
-    background-color: rgba(255, 255, 255, 0.95); /* Light background with slight transparency */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    border-radius: 0 0 5px 5px; /* Rounded corners at the bottom */
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 5px 5px;
   }
 
-    /* Additional styling for the toggler icon */
   .navbar-toggler {
-    border-color: rgba(0, 0, 0, 0.1); /* Optional: adds a border to the toggler icon */
+    border-color: rgba(0, 0, 0, 0.1);
   }
 
 </style>

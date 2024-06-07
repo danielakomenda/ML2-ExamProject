@@ -1,5 +1,6 @@
 <script>
   import { push } from "svelte-spa-router";
+  import { tick } from 'svelte';
 
   $: {
     getAllPupils();
@@ -14,14 +15,7 @@
   let semester_id;
 
   let recommendation = {};
-  let similarity = {}
-
-  let recommendedAktivTeilnehmen;
-  let recommendedLeistungZeigen;
-  let recommendedAufmerksamSein;
-  let recommendedSchulinhalteMerken;
-  let recommendedSchulinhalteAbrufen;
-
+  let similarity = {};
 
   let formVisible = false;
   let overviewVisible = false;
@@ -37,7 +31,6 @@
   let SchulinhalteAbrufen = "";
   let SchulinhalteAbrufenNotizen = "";
 
-
   //////////////////////// GET ALL STUDENTS /////////////////////////
   async function getAllPupils() {
     const response = await fetch("http://localhost:8000/get-all-pupils-data/", {
@@ -47,9 +40,9 @@
       },
     });
     const responseData = await response.json();
-    students = responseData.data;
     if (response.ok) {
       console.log("Success:", responseData);
+      students = responseData.data;
     } else {
       console.error("Failed to find pupil:", responseData);
     }
@@ -57,73 +50,103 @@
 
   //////////////////////// GET ALL SEMESTERS OF THE GIVEN STUDENT /////////////////////////
   async function getSemestersOfPupil() {
-    const response = await fetch("http://localhost:8000/get-all-semesters-data/" + student_id, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const responseData = await response.json();
-    semesters = responseData.data;
-    if (response.ok) {
-      console.log("Success:", responseData);
+    if (student_id) {
+      const response = await fetch("http://localhost:8000/get-all-semesters-data/" + student_id, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const responseData = await response.json();
+      if (response.ok) {
+        console.log("Success:", responseData);
+        semesters = responseData.data;
+      } else {
+        console.error("Failed to find student:", responseData);
+      }
     } else {
-      console.error("Failed to find student:", responseData);
+      console.log("Kein Schüler ausgewählt.");
     }
   }
 
-
   //////////////////////// GET ALL ASSESSMENTS FOR THE GIVEN SEMESTER /////////////////////////
   async function getAllAssessments() {
+    if (semester_id) {
+      const response = await fetch("http://localhost:8000/get-all-assessments-data/" + semester_id, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const responseData = await response.json();
+      if (response.ok) {
+        if (responseData.data.length > 0) {
+          console.log("Success:", responseData);
+          assessments = responseData.data;
+            if (confirm("Möchtest Du für Notizen der Lehrpersonen von OpenAI einen Textvorschlag erhalten?")) {
+            getNoteRecommendation();
+            }
+        } else {
+          if (!(confirm("Für dieses Semester gibt es noch keine Bewertungen. Möchtest Du trotzdem fortfahren?"))) {
+            push("/assessment");
+          }
+        }
+        formVisible = true;
+      } else {
+        console.error("Failed to find assessment:", responseData);
+      }
+    } else {
+      console.log("Kein Semester ausgewählt");
+    }
+  }
+
+  //////////////////////// GET ALL ASSESSMENTS FOR THE GIVEN SEMESTER /////////////////////////
+  async function getNoteRecommendation() {
     for (let stud of students) {
       if (stud["_id"] === student_id) {
         student = stud;
       }
     }
-    const response = await fetch("http://localhost:8000/get-all-assessments-data/" + semester_id, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(student),
-    });
-    const responseData = await response.json();
-    assessments = responseData.data;
-    recommendation = responseData.notes;
-    recommendedAktivTeilnehmen=recommendation.AktivTeilnehmen
-    recommendedLeistungZeigen=recommendation.LeistungZeigen
-    recommendedAufmerksamSein=recommendation.AufmerksamSein
-    recommendedSchulinhalteMerken=recommendation.SchulinhalteMerken
-    recommendedSchulinhalteAbrufen=recommendation.SchulinhalteAbrufen
-
-    formVisible = true;
-    if (response.ok) {
-      console.log("Success:", responseData);
-      console.log(assessments[0]);
+    const data = {
+      student: student,
+      assessments: assessments,
+    };
+    if (semester_id) {
+      const response = await fetch("http://localhost:8000/get-note-recommendation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const responseData = await response.json();
+      if (response.ok) {
+        console.log("Success:", responseData);
+        recommendation = responseData.notes;
+        AktivTeilnehmenNotizen = recommendation.AktivTeilnehmen;
+        LeistungZeigenNotizen = recommendation.LeistungZeigen;
+        AufmerksamSeinNotizen = recommendation.AufmerksamSein;
+        SchulinhalteMerkenNotizen = recommendation.SchulinhalteMerken;
+        SchulinhalteAbrufenNotizen = recommendation.SchulinhalteAbrufen;
+      }
     } else {
-      console.error("Failed to find student:", responseData);
+      console.error("Failed to find assessment:", responseData);
     }
   }
-
 
   //////////////////////// GET SIMILARITY OF ALL THE NOTES /////////////////////////
   async function getTextSimilarity() {
     const data = {
-        recommended: {
-            AktivTeilnehmen:recommendedAktivTeilnehmen,
-            LeistungZeigen:recommendedLeistungZeigen,
-            AufmerksamSein:recommendedAufmerksamSein,
-            SchulinhalteMerken:recommendedSchulinhalteMerken,
-            SchulinhalteAbrufen:recommendedSchulinhalteAbrufen,
-        },
-        manually: {
-            AktivTeilnehmen:AktivTeilnehmenNotizen,
-            LeistungZeigen:LeistungZeigenNotizen,
-            AufmerksamSein:AufmerksamSeinNotizen,
-            SchulinhalteMerken:SchulinhalteMerkenNotizen,
-            SchulinhalteAbrufen:SchulinhalteAbrufenNotizen,
-        }
+      recommended: recommendation,
+      manually: {
+        AktivTeilnehmen: AktivTeilnehmenNotizen,
+        LeistungZeigen: LeistungZeigenNotizen,
+        AufmerksamSein: AufmerksamSeinNotizen,
+        SchulinhalteMerken: SchulinhalteMerkenNotizen,
+        SchulinhalteAbrufen: SchulinhalteAbrufenNotizen,
+      },
     };
+    console.log(data);
     const response = await fetch("http://localhost:8000/get-notes-similarity", {
       method: "POST",
       headers: {
@@ -132,18 +155,19 @@
       body: JSON.stringify(data),
     });
     const responseData = await response.json();
-    similarity = responseData.similarity
-    console.log(similarity)
-    overviewVisible = true
     if (response.ok) {
+      overviewVisible = true;
       console.log("Success:", responseData);
+      similarity = responseData.similarity;
+      console.log(similarity);
+      await tick();
+      scroll("bestaetigen")
     } else {
       console.error("Failed to create entry:", responseData);
     }
   }
 
-
-//////////////////////// CREATE FINAL ASSESSMENT /////////////////////////
+  //////////////////////// CREATE FINAL ASSESSMENT /////////////////////////
   async function createFinalAssessment() {
     const assessment_data = {
       allgemeines_lernen: {
@@ -179,20 +203,22 @@
     const responseData = await response.json();
     if (response.ok) {
       console.log("Success:", responseData);
-      if (confirm("Möchtest Du einen weiteren Schüler beurteilen?")) {
+      if (confirm("Möchtest Du den Text generieren lassen?")) {
+        push("/create-text");
+      } else {
+        if (confirm("Möchtest Du eine weitere Beurteilung finalisieren?")) {
         cancel();
         push("/combine");
-      } else {
-        push("/create-text");
+        }
       }
     } else {
       console.error("Failed to create entry:", responseData);
     }
   }
 
- //////////////////////// DELETE ALL THE FORM-DATA /////////////////////////
+  //////////////////////// DELETE ALL THE FORM-DATA /////////////////////////
   function cancel() {
-    if (confirm("Möchten Sie das Formular wirklich leeren?")) {
+    if (confirm("Möchten Du das Formular wirklich leeren?")) {
       author = "";
       AktivTeilnehmen = "";
       AktivTeilnehmenNotizen = "";
@@ -207,8 +233,7 @@
     }
   }
 
-
-   //////////////////////// CHECK IF ALL REQUIRED ANSWERS ARE THERE /////////////////////////
+  //////////////////////// CHECK IF ALL REQUIRED ANSWERS ARE THERE /////////////////////////
   function checkAnswers() {
     if (AktivTeilnehmen === "") {
       alert("Bitte eine Bewertung eingeben.");
@@ -230,28 +255,7 @@
     }
   }
 
-
- //////////////////////// ACCEPT THE RECOMMENDED TEXT /////////////////////////
-  function accept(value){
-    if (value===AktivTeilnehmenNotizen) {
-        AktivTeilnehmenNotizen=recommendedAktivTeilnehmen
-    }
-    else if (value===LeistungZeigenNotizen) {
-        LeistungZeigenNotizen=recommendedLeistungZeigen
-    }
-    else if (value===AufmerksamSeinNotizen) {
-        AufmerksamSeinNotizen=recommendedAufmerksamSein
-    }
-    else if (value===SchulinhalteMerkenNotizen) {
-        SchulinhalteMerkenNotizen=recommendedSchulinhalteMerken
-    }
-    else {
-        SchulinhalteAbrufenNotizen=recommendedSchulinhalteAbrufen
-    }
-  }
-
-
-   //////////////////////// SCROLL TO ID /////////////////////////
+  //////////////////////// SCROLL TO ID /////////////////////////
   function scroll(id) {
     const element = document.getElementById(id);
     if (element) {
@@ -260,7 +264,6 @@
       console.error("Element with ID " + id + " not found.");
     }
   }
-
 </script>
 
 <div class="component">
@@ -281,7 +284,6 @@
   </select>
 
   <form on:submit|preventDefault={checkAnswers}>
-    
     <!-- ################################### AKTIV AM UNTERRICHT TEILNEHMEN ################################### -->
 
     {#if formVisible}
@@ -299,9 +301,9 @@
                 <td class="author">{assessment.author}</td>
                 <td class="assessment">{assessment.allgemeines_lernen.AktivTeilnehmen.assessment}</td>
                 <td>
-                    {#if assessment.allgemeines_lernen.AktivTeilnehmen.notes}
+                  {#if assessment.allgemeines_lernen.AktivTeilnehmen.notes}
                     {assessment.allgemeines_lernen.AktivTeilnehmen.notes}
-                    {/if}
+                  {/if}
                 </td>
               </tr>
             {/each}
@@ -365,22 +367,12 @@
                 </div>
               </td>
               <td>
-                {#if recommendedAktivTeilnehmen}
-                  <textarea
-                    bind:value={AktivTeilnehmenNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder={recommendedAktivTeilnehmen}
-                  />
-                  <button type="button" on:click={accept(AktivTeilnehmenNotizen)}>Übernehmen</button>
-                {:else}
-                  <textarea
-                    bind:value={AktivTeilnehmenNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder="Weitere Anmerkungen"
-                  />
-                {/if}
+                <textarea
+                  bind:value={AktivTeilnehmenNotizen}
+                  class="form-control"
+                  rows="5"
+                  placeholder="Weitere Anmerkungen"
+                />
               </td>
             </tr>
           </table>
@@ -403,9 +395,9 @@
                 <td class="author">{assessment.author}</td>
                 <td class="assessment">{assessment.allgemeines_lernen.LeistungZeigen.assessment}</td>
                 <td>
-                    {#if assessment.allgemeines_lernen.LeistungZeigen.notes}
+                  {#if assessment.allgemeines_lernen.LeistungZeigen.notes}
                     {assessment.allgemeines_lernen.LeistungZeigen.notes}
-                    {/if}
+                  {/if}
                 </td>
               </tr>
             {/each}
@@ -469,22 +461,12 @@
                 </div>
               </td>
               <td>
-                {#if recommendedLeistungZeigen}
-                  <textarea
-                    bind:value={LeistungZeigenNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder={recommendedLeistungZeigen}
-                  />
-                  <button type="button" on:click={accept(LeistungZeigenNotizen)}>Übernehmen</button>
-                {:else}
-                  <textarea
-                    bind:value={LeistungZeigenNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder="Weitere Anmerkungen"
-                  />
-                {/if}
+                <textarea
+                  bind:value={LeistungZeigenNotizen}
+                  class="form-control"
+                  rows="5"
+                  placeholder="Weitere Anmerkungen"
+                />
               </td>
             </tr>
           </table>
@@ -507,9 +489,9 @@
                 <td class="author">{assessment.author}</td>
                 <td class="assessment">{assessment.allgemeines_lernen.AufmerksamSein.assessment}</td>
                 <td>
-                    {#if assessment.allgemeines_lernen.AufmerksamSein.notes}
+                  {#if assessment.allgemeines_lernen.AufmerksamSein.notes}
                     {assessment.allgemeines_lernen.AufmerksamSein.notes}
-                    {/if}
+                  {/if}
                 </td>
               </tr>
             {/each}
@@ -573,22 +555,12 @@
                 </div>
               </td>
               <td>
-                {#if recommendedAufmerksamSein}
-                  <textarea
-                    bind:value={AufmerksamSeinNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder={recommendedAufmerksamSein}
-                  />
-                  <button type="button" on:click={accept(AufmerksamSeinNotizen)}>Übernehmen</button>
-                {:else}
-                  <textarea
-                    bind:value={AufmerksamSeinNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder="Weitere Anmerkungen"
-                  />
-                {/if}
+                <textarea
+                  bind:value={AufmerksamSeinNotizen}
+                  class="form-control"
+                  rows="5"
+                  placeholder="Weitere Anmerkungen"
+                />
               </td>
             </tr>
           </table>
@@ -611,9 +583,9 @@
                 <td class="author">{assessment.author}</td>
                 <td class="assessment">{assessment.allgemeines_lernen.SchulinhalteMerken.assessment}</td>
                 <td>
-                    {#if assessment.allgemeines_lernen.SchulinhalteMerken.notes}
+                  {#if assessment.allgemeines_lernen.SchulinhalteMerken.notes}
                     {assessment.allgemeines_lernen.SchulinhalteMerken.notes}
-                    {/if}
+                  {/if}
                 </td>
               </tr>
             {/each}
@@ -672,22 +644,12 @@
                 </div>
               </td>
               <td>
-                {#if recommendedSchulinhalteMerken}
-                  <textarea
-                    bind:value={SchulinhalteMerkenNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder={recommendedSchulinhalteMerken}
-                  />
-                  <button type="button" on:click={accept(SchulinhalteMerkenNotizen)}>Übernehmen</button>
-                {:else}
-                  <textarea
-                    bind:value={SchulinhalteMerkenNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder="Weitere Anmerkungen"
-                  />
-                {/if}
+                <textarea
+                  bind:value={SchulinhalteMerkenNotizen}
+                  class="form-control"
+                  rows="5"
+                  placeholder="Weitere Anmerkungen"
+                />
               </td>
             </tr>
           </table>
@@ -710,9 +672,9 @@
                 <td class="author">{assessment.author}</td>
                 <td class="assessment">{assessment.allgemeines_lernen.SchulinhalteAbrufen.assessment}</td>
                 <td>
-                    {#if assessment.allgemeines_lernen.SchulinhalteMerken.notes}
-                    {assessment.allgemeines_lernen.SchulinhalteMerken.notes}
-                    {/if}
+                  {#if assessment.allgemeines_lernen.SchulinhalteAbrufen.notes}
+                    {assessment.allgemeines_lernen.SchulinhalteAbrufen.notes}
+                  {/if}
                 </td>
               </tr>
             {/each}
@@ -771,43 +733,35 @@
                 </div>
               </td>
               <td>
-                {#if recommendedSchulinhalteAbrufen}
-                  <textarea
-                    bind:value={SchulinhalteAbrufenNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder={recommendedSchulinhalteAbrufen}
-                  />
-                  <button type="button" on:click={accept(SchulinhalteAbrufenNotizen)}>Übernehmen</button>
-                {:else}
-                  <textarea
-                    bind:value={SchulinhalteAbrufenNotizen}
-                    class="form-control"
-                    rows="5"
-                    placeholder="Weitere Anmerkungen"
-                  />
-                {/if}
+                <textarea
+                  bind:value={SchulinhalteAbrufenNotizen}
+                  class="form-control"
+                  rows="5"
+                  placeholder="Weitere Anmerkungen"
+                />
               </td>
             </tr>
           </table>
         </div>
       </div>
 
-      <button type="button" on:click={getTextSimilarity} on:click={() => scroll("bestaetigen")}>Abschliessen</button>
-      {/if}
+      <button type="button" on:click={getTextSimilarity}>Abschliessen</button>
+    {/if}
 
-      <!-- ################################### ABSENDEN ################################### -->
-      
-      {#if overviewVisible}
+    <!-- ################################### ABSENDEN ################################### -->
 
+    {#if overviewVisible}
       <div class="abschnitt">
         <h2>Übersicht</h2>
 
-        <p>Die Ähnlichkeit bezieht sich auf die Corsine-Distance zwischen den von den Openai-API vorgeschlagenen Notizen und den selbst verfassten Notizen.</p>
+        <p>
+          Die Ähnlichkeit bezieht sich auf die Corsine-Distance zwischen den von den Openai-API vorgeschlagenen Notizen
+          und den selbst verfassten Notizen.
+        </p>
         <div class="table-responsive">
           <table class="table">
             <tr>
-              <th class="author">Bereich</th>
+              <th class="criteria">Bereich</th>
               <th class="assessment">Bewertung</th>
               <th class="notes">Anmerkungen</th>
               <th class="similarity">Ähnlichkeit</th>
@@ -820,12 +774,12 @@
               </td>
               <td>
                 {#if AktivTeilnehmenNotizen}
-                {AktivTeilnehmenNotizen}
+                  {AktivTeilnehmenNotizen}
                 {/if}
               </td>
               <td>
                 {#if similarity.AktivTeilnehmen}
-                {similarity.AktivTeilnehmen}
+                  {similarity.AktivTeilnehmen}
                 {/if}
               </td>
               <td>
@@ -839,12 +793,12 @@
               </td>
               <td>
                 {#if LeistungZeigenNotizen}
-                {LeistungZeigenNotizen}
+                  {LeistungZeigenNotizen}
                 {/if}
               </td>
               <td>
                 {#if similarity.LeistungZeigen}
-                {similarity.LeistungZeigen}
+                  {similarity.LeistungZeigen}
                 {/if}
               </td>
               <td>
@@ -858,12 +812,12 @@
               </td>
               <td>
                 {#if AufmerksamSeinNotizen}
-                {AufmerksamSeinNotizen}
+                  {AufmerksamSeinNotizen}
                 {/if}
               </td>
               <td>
                 {#if similarity.AufmerksamSein}
-                {similarity.AufmerksamSein}
+                  {similarity.AufmerksamSein}
                 {/if}
               </td>
               <td>
@@ -877,12 +831,12 @@
               </td>
               <td>
                 {#if SchulinhalteMerkenNotizen}
-                {SchulinhalteMerkenNotizen}
+                  {SchulinhalteMerkenNotizen}
                 {/if}
               </td>
               <td>
                 {#if similarity.SchulinhalteMerken}
-                {similarity.SchulinhalteMerken}
+                  {similarity.SchulinhalteMerken}
                 {/if}
               </td>
               <td>
@@ -896,12 +850,12 @@
               </td>
               <td>
                 {#if SchulinhalteAbrufenNotizen}
-                {SchulinhalteAbrufenNotizen}
+                  {SchulinhalteAbrufenNotizen}
                 {/if}
               </td>
               <td>
                 {#if similarity.SchulinhalteAbrufen}
-                {similarity.SchulinhalteAbrufen}
+                  {similarity.SchulinhalteAbrufen}
                 {/if}
               </td>
               <td>
@@ -912,13 +866,17 @@
         </div>
       </div>
       <div class="abschnitt">
-        <button type="submit" id="bestaetigen">Bestätigen</button>
         <button type="button" on:click={cancel}>Abbrechen</button>
+        <button type="submit">Bestätigen</button>
       </div>
     {/if}
-  </form>
-</div>
+    <div id="bestaetigen">
 
+    </div>
+  </form>
+
+
+</div>
 
 <style>
   .abschnitt {
@@ -958,8 +916,12 @@
     width: 200px;
   }
 
+  .criteria {
+    width: 100px;
+  }
+
   .assessment {
-    width: 150px;
+    width: 100px;
   }
 
   .notes {

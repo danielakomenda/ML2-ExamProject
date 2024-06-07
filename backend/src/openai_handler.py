@@ -1,9 +1,20 @@
 import os
 import json
 import re
+from typing import Any
 
 import dotenv
 import openai
+
+
+# criteria
+allgemeines_lernen = {
+    "AktivTeilnehmen": 'aktiv am Unterricht teilnehmen',
+    "LeistungZeigen": 'im Unterricht Leistung zeigen',
+    "AufmerksamSein": 'während dem Unterricht Aufmerksam sein und den Instruktionen der Lehrperson folgen',
+    "SchulinhalteMerken": 'sich schulische Inhalte merken',
+    "SchulinhalteAbrufen": 'schulische Inhalte bei Bedarf abrufen',
+}
 
 
 def get_api_key():
@@ -17,6 +28,7 @@ def _openai(messages, chain=True) -> openai.types.chat.chat_completion.Choice:
     Request is sent to OpenAI
     Return the response in a ChatCompletion-Object
     """
+    openai.api_key = get_api_key()
     model_result = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=messages,
@@ -32,23 +44,24 @@ def _openai(messages, chain=True) -> openai.types.chat.chat_completion.Choice:
 
 def anonymise(student, text):
     if student["gender"].lower()=="männlich":
-        aliasname = "[John]"
+        aliasname = "John"
     else:
-        aliasname = "[Jane]"
+        aliasname = "Jane"
     alias_text = text.replace(student["firstname"], aliasname)
     return alias_text
 
 
 def deanonymise(student, text):
     if student["gender"].lower()=="männlich":
-        aliasname = "[John]"
+        aliasname = "John"
     else:
-        aliasname = "[Jane]"
+        aliasname = "Jane"
     alias_text = text.replace(aliasname, student["firstname"])
     return alias_text
 
 
 #################################### COMBINE ####################################
+
 
 def prompt_for_note_recommendation(notes):
     system_content = f"""
@@ -104,17 +117,28 @@ def collect_notes(student, assessments):
         for k, v in assessment["allgemeines_lernen"].items():
             if v["notes"]:
                 notes.setdefault(k, []).append(anonymise(student, v["notes"]))
-    notes = {k:v for k,v in notes.items() if len(v)>1}
-    return json.dumps(notes, ensure_ascii=False)
+    notes = {k:v for k,v in notes.items() if len(v)>0}
+    return notes
 
 
 
-def get_recommendation_notes(student, assessment):
-    notes = collect_notes(student, assessment)
-    messages = prompt_for_note_recommendation(notes)
-    openai.api_key = get_api_key()
-    answer = _openai(messages, False)
-    note = json.loads(deanonymise(student, answer))
+async def get_recommendation_notes(student, assessments: list[dict[str, Any]]) -> dict[str, str]:
+    notes = collect_notes(student, assessments)    
+    if notes:
+        messages = prompt_for_note_recommendation(json.dumps(notes, ensure_ascii=False))
+        print(messages) # to check, if anonymise() worked
+        answer = _openai(messages, False)
+        note_raw = json.loads(deanonymise(student, answer))
+    else:
+        note_raw = {}
+    note = {}
+    for k in allgemeines_lernen:
+        v = note_raw.get(k)
+        if isinstance(v, (list,tuple)):
+            v = "".join(v)
+        else:
+            assert v is None or isinstance(v, str)
+        note[k] = v or ""
     return note
 
 
@@ -122,13 +146,6 @@ def get_recommendation_notes(student, assessment):
 
 
 def format_prompt_content(semester, student):
-    allgemeines_lernen = {
-        "AktivTeilnehmen": 'aktiv am Unterricht teilnehmen',
-        "LeistungZeigen": 'im Unterricht Leistung zeigen',
-        "AufmerksamSein": 'während dem Unterricht Aufmerksam sein und den Instruktionen der Lehrperson folgen',
-        "SchulinhalteMerken": 'sich schulische Inhalte merken',
-        "SchulinhalteAbrufen": 'schulische Inhalte bei Bedarf abrufen',
-    }
     assessment = semester["final_assessment"]["allgemeines_lernen"]
     text = "\n".join(
         f" - {student['firstname']} kann {v['assessment']} {allgemeines_lernen[k]} {v['notes']}"
@@ -201,10 +218,10 @@ def prompt_for_textgeneration(semester, student):
     ]
 
 
-def get_text(data):
+async def get_first_text(data):
     messages = prompt_for_textgeneration(data["semester"], data["student"])
-    openai.api_key = get_api_key()
-    answer, chain = _openai(messages)
+    print(messages) # to check, if anonymise() worked
+    answer, chain = _openai(messages)    
     return deanonymise(data["student"], answer), chain
 
 
@@ -213,11 +230,14 @@ def get_text(data):
 
 
 def prompt_for_follow_up(chain, prompt):
-    return chain.append(prompt)
+    chain.append({
+        "role":"user",
+        "content":prompt
+    })
 
 
-def get_other_text(data):
-    messages = prompt_for_follow_up(data["chain"], anonymise(data["student"], data["prompt"]))
-    openai.api_key = get_api_key()
-    answer, chain = _openai(messages)
+async def get_other_text(data):
+    prompt_for_follow_up(data["chain"], anonymise(data["student"], data["prompt"]))
+    print(data["chain"]) # to check, if anonymise() worked
+    answer, chain = _openai(data["chain"])
     return deanonymise(data["student"], answer), chain

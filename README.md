@@ -34,12 +34,6 @@
 ## Home
 Here you find the project-goal and motivation behind the project
 
-## Stammdaten
-Here you can create a new student and add him or her to the Database
-
-## Semesterdaten
-Here you can create a new Semester-Dataset for a specific student
-
 ## Beurteilen
 Here you can choose a student and a semester.
 You create an assessment for the student by different criteria.
@@ -69,3 +63,11 @@ If you are not yet happy with the text, you can write your own prompt to give op
 You can also write your own text.
 If you write your own text the Cosine-Similarity will be calculated between the openAI-recommended-text and your own one.
 If you are happy with the text, it will be stored in the Database with the rest of the semester-data.
+
+
+
+## Student
+If you'd like to create your own student, you can use '/base-data'-URL.
+
+## Semester
+If you'd like to create your own semester, you can use '/semester-data'-URL.

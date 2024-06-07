@@ -1,9 +1,7 @@
 from litestar import Litestar, get, post, put, Request, MediaType
 from litestar.config.cors import CORSConfig
-
 from typing import Dict, Any
 
-# Importing your database handler functions
 from src.db_handler import *
 from src.openai_handler import *
 from src.text_similarity import *
@@ -38,11 +36,10 @@ async def get_all_pupils_data() -> Dict[str, Any]:
 
 @get("/get-pupil-data/{student_id:str}")
 async def get_pupil_data(student_id:str) -> Dict[str, Any]:
-    print("Checkpoint Endpoint Start", student_id)
     data = get_pupil(student_id)
     return dict(
         status="success",
-        message=f"Entry found for student with ID: {student_id}",
+        message=f"Entry found for student with ID {student_id}",
         data=data
     )
 
@@ -64,7 +61,7 @@ async def get_all_semesters_data(student_id:str) -> Dict[str, Any]:
     data = get_all_semesters(student_id)
     return dict(
         status="success",
-        message=f"Found all semesters for student with id {student_id}",
+        message=f"Found all semesters for student with ID {student_id}",
         data=data
     )
 
@@ -73,7 +70,7 @@ async def get_semester_data(semester_id:str) -> Dict[str, Any]:
     data = get_semester(semester_id)
     return dict(
         status="success",
-        message=f"Found semester with id {semester_id}",
+        message=f"Found semester with ID {semester_id}",
         data=data
     )
 
@@ -83,22 +80,30 @@ async def create_assessment_data(request:Request) -> dict:
     entry = insert_assessement(data)
     return dict(
         status="success",
-        message=f"Successfully added assessement for student with id: {data.get('student_id')}",
+        message=f"Successfully added assessement for student with ID {data.get('student_id')}",
         entry=entry
     )
 
 ################################# COMBINE #################################
 
-@post("/get-all-assessments-data/{semester_id:str}")
-async def get_all_assessments_data(semester_id:str, request:Request) -> Dict[str, Any]:
-    student = await request.json()
+@get("/get-all-assessments-data/{semester_id:str}")
+async def get_all_assessments_data(semester_id:str) -> Dict[str, Any]:
     data = get_all_assessments(semester_id)
-    notes = get_recommendation_notes(student, data)
     return dict(
         status="success",
-        message=f"Found all assessments for semester with id {semester_id}",
+        message=f"Found all assessments for semester with ID {semester_id}",
         data=data,
-        notes=notes
+    )
+    
+    
+@post("/get-note-recommendation")
+async def get_note_recommendation(request:Request) -> Dict[str, Any]:
+    data = await request.json()
+    notes = await get_recommendation_notes(data["student"], data["assessments"])
+    return dict(
+        status="success",
+        message=f"Created recommendation for teacher's notes",
+        notes=notes,
     )
 
 
@@ -119,7 +124,7 @@ async def create_final_assessment_data(semester_id:str, request:Request) -> dict
     entry = insert_final_assessment(semester_id, data)
     return dict(
         status="success",
-        message=f"Successfully added final assessment for semester with id {semester_id}",
+        message=f"Added final assessment to semester with ID {semester_id}",
         entry=entry
     )
 
@@ -131,15 +136,15 @@ async def get_all_semesters_with_final_assessments(student_id:str) -> Dict[str, 
     data = get_semesters_with_final_assessments(student_id)
     return dict(
         status="success",
-        message=f"Found all final-assessments for student with id {student_id}",
+        message=f"Found all final assessments for student with ID {student_id}",
         data=data
     )
 
 
 @post("/generate-first-text")
-async def get_first_text(request:Request) -> Dict[str, Any]:
-    data = await request.json()    
-    answer, chain = get_text(data)
+async def get_first_text_recommendation(request:Request) -> Dict[str, Any]:
+    data = await request.json()
+    answer, chain = await get_first_text(data)
     return dict(
         status="success",
         message=f"Created Text",
@@ -149,9 +154,9 @@ async def get_first_text(request:Request) -> Dict[str, Any]:
 
 
 @post("/generate-second-text")
-async def get_second_text(request:Request) -> Dict[str, Any]:
+async def get_second_text_recommendation(request:Request) -> Dict[str, Any]:
     data = await request.json()    
-    answer, chain = get_other_text(data)
+    answer, chain = await get_other_text(data)
     return dict(
         status="success",
         message=f"Created Text",
@@ -168,7 +173,7 @@ async def get_text_similarity(request:Request) -> Dict[str, Any]:
     return dict(
         status="success",
         message=f"Similarity calculated",
-        similarity=similarity
+        similarity=similarity,
     )
     
 
@@ -178,7 +183,7 @@ async def create_final_text_data(semester_id:str, request:Request) -> dict:
     entry = insert_final_text(semester_id, data)
     return dict(
         status="success",
-        message=f"Successfully added final text for semester with id {data.get('semester_id')}",
+        message=f"Added final text to the semester with ID {semester_id}",
         entry=entry,
     )
 
@@ -195,9 +200,10 @@ app = Litestar(
         get_all_assessments_data,
         create_final_assessment_data,
         get_all_semesters_with_final_assessments,
+        get_note_recommendation,
         get_notes_similarity,
-        get_first_text,
-        get_second_text,
+        get_first_text_recommendation,
+        get_second_text_recommendation,
         get_text_similarity,
         create_final_text_data,
     ], cors_config=cors_config

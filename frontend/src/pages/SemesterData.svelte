@@ -62,8 +62,8 @@
             "niveau":niveau,
             "last_progress_talk":last_progress_talk,
             "last_report":last_report,
-            "final_assessment":{},
-            "text":{}
+            "final_assessment":null,
+            "final_text":null
         };
         const response = await fetch('http://localhost:8000/create-semester-data/', {
             method: 'POST',
@@ -112,11 +112,10 @@
     
     <div class="abschnitt">
         <h2>Stammdaten von {student.firstname} {student.lastname}</h2>
-        <table>
+        <table class="table">
             <tr>
-                <th>Geburtsdatum</th>
-                <th>Eintritt</th>
-            </tr>
+              <th class="left">Geburtsdatum</th>
+              <th class="right">Eintritt</th>
             <tr>
                 <td>
                     {student.birthday}
@@ -165,25 +164,26 @@
                 <option value="FS24">FS24</option>
             </select>
 
-            <table>
+
+            <table class="table">
                 <tr>
-                    <th>Klassenstufe</th>
-                    <th>Niveau</th>
+                    <th class="left">Klassenstufe</th>
+                    <th class="right">Niveau</th>
                 </tr>
                 <tr>
-                    <td>
+                    <td class="form">
                         <select class="form-control" bind:value={grade_level} id="Klassenstufe" required>
                             <option value="">Klassenstufe</option>
                             <option value="4.Klasse">4. Klasse</option>
                             <option value="5.Klasse">5. Klasse</option>
                             <option value="6.Klasse">6. Klasse</option>
-                            <option value="7.Klasse">7. Klasse</option>
-                            <option value="8.Klasse">8. Klasse</option>
-                            <option value="9.Klasse">9. Klasse</option>
-                            <option value="10.Klasse">10. Klasse</option>
+                            <option value="1.Sekundarstufe">1. Sekundarstufe</option>
+                            <option value="2.Sekundarstufe">2. Sekundarstufe</option>
+                            <option value="3.Sekundarstufe">3. Sekundarstufe</option>
+                            <option value="10.Schuljahr">10. Schuljahr</option>
                         </select>
                     </td>
-                    <td>
+                    <td class="form">
                         <select class="form-control" bind:value={niveau} id="Niveau" required>
                             <option value="">Niveau</option>
                             <option value="A">A</option>
@@ -194,11 +194,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Letzter Bericht</th>
                     <th>Letztes Standortgespräch</th>
+                    <th>Letzter Bericht</th>
                 </tr>
                 <tr>
-                    <td>
+                    <td class="form">
                         <select class="form-control" bind:value={last_progress_talk} id="Standortgespaech">
                             <option value="">Letztes Standortgespräch</option>
                             <option value="keines">keines</option>
@@ -209,10 +209,10 @@
                             <option value="FS24">FS24</option>
                         </select>
                     </td>
-                    <td>
+                    <td class="form">
                         <select class="form-control" bind:value={last_report} id="Bericht">
                             <option value="">Letzter Bericht</option>
-                            <option value="keines">keines</option>
+                            <option value="keines">keiner</option>
                             <option value="FS22">FS22</option>
                             <option value="HS22">HS22</option>
                             <option value="FS23">FS23</option>
@@ -230,6 +230,12 @@
 </div>
       
 <style>
+  .left, .right {
+    width: 50%;
+  }
 
+  .form {
+    background-color: white;
+  }
 </style>
     
