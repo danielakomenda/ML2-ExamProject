@@ -169,7 +169,7 @@
     if (response.ok) {
       console.log("Success:", responseData);
       if (confirm("Möchtest Du die Einschätzungen kombinieren?")) {
-        push("/combine");
+        push("/combine/"+semester_id+"/"+student_id);
       } else {
         cancel();
         push("/assessment");

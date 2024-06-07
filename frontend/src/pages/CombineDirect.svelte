@@ -193,7 +193,7 @@
     if (response.ok) {
       console.log("Success:", responseData);
       if (confirm("Möchtest Du den Text generieren lassen?")) {
-        push("/create-text");
+        push("/create-text/"+semester_id+"/"+student_id);
       } else {
         if (confirm("Möchtest Du eine weitere Beurteilung finalisieren?")) {
           cancel();
@@ -256,7 +256,7 @@
 </script>
 
 <div class="component">
-  <h1>Zusammenführen</h1>
+  <h1>Zusammenführen der Assessments für {student.firstname} {student.lastname}</h1>
 
   <form on:submit|preventDefault={checkAnswers}>
     <!-- ################################### AKTIV AM UNTERRICHT TEILNEHMEN ################################### -->

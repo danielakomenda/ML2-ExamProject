@@ -29,6 +29,32 @@
 - Check your MongoDB, if you can find 3 collections and Data in each collection
 
 
+## Happy-Path
+- Go to "Beurteilen"
+- Choose Student "Natasha Romanoff"
+- Choose Semester "HS23"
+- Write an Assessment, notes are not required but nice to have.
+- Click "Bestätigen"
+- Click "OK" -> you will be directed to the page "Zusammenführen" for Natasha and HS23
+- Click "OK"
+- Choose the "Bewertung" you find most suitable
+- Change at least one note
+- Click "Abschliessen"
+    - -> You can see an Overview of the final assessment
+    - -> You can see the similarity of your modified note and the recommended note from OpenAI
+- Click "Bestätigen" -> you will be directed to the page "Finaler Text" for Natasha for HS23
+- Click "Text generieren"
+- Click "Korrigieren"
+- Write a propmpt (e.g. Bitte füge bei den Sprachen noch Französisch hinzu)
+- Click "Send"
+- Click "Eigener Text"
+- You can write your own text (e.g. Test Text)
+- Click "Send"
+    - -> You will see the similarity between your text and the first text from OpenAI
+    - -> Your text will be stored in the Database
+- Click "OK"
+
+
 # Front-End-Explanation
 
 ## Home

@@ -204,7 +204,7 @@
     if (response.ok) {
       console.log("Success:", responseData);
       if (confirm("Möchtest Du den Text generieren lassen?")) {
-        push("/create-text");
+        push("/create-text/"+semester_id+"/"+student_id);
       } else {
         if (confirm("Möchtest Du eine weitere Beurteilung finalisieren?")) {
         cancel();
