@@ -17,8 +17,8 @@ def get_bert_embeddings(text, model, tokenizer):
 
 
 def calculate_similarity(text1, text2):
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    model = BertModel.from_pretrained('bert-base-uncased')
+    tokenizer = BertTokenizer.from_pretrained('bert-base-german-cased')
+    model = BertModel.from_pretrained('bert-base-german-cased')
 
     embeddings1 = get_bert_embeddings(text1, model, tokenizer)
     embeddings2 = get_bert_embeddings(text2, model, tokenizer)
