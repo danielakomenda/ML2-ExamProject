@@ -29,7 +29,7 @@ I use prompt engineering with a few-shot approach, allowing OpenAI to understand
 ## Interpretation and Validation
 Whenever a teacher opts for a text other than the one recommended by OpenAI, the cosine similarity between the two texts is calculated. A high similarity score indicates that OpenAI's output closely meets the report requirements set by the teachers. Conversely, a low score suggests inadequacies in the prompts or few-shot examples used, signaling a need for adjustment. Both the initial and manually chosen texts are stored in the database, along with the similarity scores and timestamps. This data is archived for future analysis to enhance the web application's functionality.
 
-To evaluate the effectiveness of the prompt engineering, I used historical texts and assessments, sending them anonymously to OpenAI for text generation. These generated texts were then compared with the original texts focused on specific criteria. Since only a subset of the criteria was relevant for this webapp, it was necessary to extract just the matching sections.
+To evaluate the effectiveness of the prompt engineering, I used historical texts and assessments, sending them anonymously to OpenAI for text generation. These generated texts were then compared with the original texts. Since only a subset of the ICF-Criteria was used for this webapp, it was necessary to extract just the matching sections. The Cosine-Similarity is calculated and stored with the original-text and the openai-text in an Excel-File ("Test-Evaluation.xlsx"). I asked a teachers and two special education teacher which text they would prefere and wrote down the preferences in a seperate excel sheet ("Test-Preferences.xlsx").
 
 
 
@@ -48,7 +48,7 @@ To evaluate the effectiveness of the prompt engineering, I used historical texts
     - OPENAI_APIKEY=<openai-api-key> <-- if you don't have one, contact me
 
 
-## 3. reate Dummy-Data
+## 3. Create Dummy-Data
 - Kernel: Python 3.11 or higher
 - Run Jupyter Notebook "Dummy-Data-Input"
 - Check your MongoDB, if you can find 3 collections and data in each collection
