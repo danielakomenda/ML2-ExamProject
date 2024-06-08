@@ -126,7 +126,6 @@ async def get_recommendation_notes(student, assessments: list[dict[str, Any]]) -
     notes = collect_notes(student, assessments)    
     if notes:
         messages = prompt_for_note_recommendation(json.dumps(notes, ensure_ascii=False))
-        print(messages) # to check, if anonymise() worked
         answer = _openai(messages, False)
         note_raw = json.loads(deanonymise(student, answer))
     else:
