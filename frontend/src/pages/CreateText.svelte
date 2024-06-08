@@ -347,7 +347,7 @@
             <tr class="styleless">
               <td class="styleless" />
               <td class="styleless prompt">
-                <input type="text" bind:value={prompt} placeholder="Was möchtest du ändern?" />
+                <textarea class="textarea styleless prompt" rows="3" bind:value={prompt} placeholder="Was möchtest du ändern?" />
                 <button type="button" class="mybutton" on:click={getSecondText}>Send</button>
               </td>
             </tr>
@@ -371,7 +371,7 @@
             <tr class="styleless">
               <td class="styleless" />
               <td class="styleless prompt">
-                <input type="text" rows="5" bind:value={manualText} placeholder="Was möchtest du ändern?" />
+                <textarea class="textarea styleless prompt" rows="5" bind:value={manualText} placeholder="Schreibe deinen Text." />
                 <button type="button" class="mybutton" on:click={createFinalText(manualText)}>Send</button>
               </td>
             </tr>
@@ -416,7 +416,7 @@
     border-width: 0px;
   }
 
-  input {
+  .textarea {
     border-width: 0px;
     width: 100%;
   }
